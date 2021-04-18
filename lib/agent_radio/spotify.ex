@@ -1,4 +1,7 @@
 defmodule AgentRadio.Spotify do
+  @api_url "https://api.spotify.com"
+  @token_url "https://accounts.spotify.com/api/token"
+
   def authorize_url do
     %{client_id: client_id, redirect_uri: redirect_uri} = env_config()
 
@@ -36,11 +39,64 @@ defmodule AgentRadio.Spotify do
       Accept: "application/json"
     ]
 
-    case HTTPoison.post("https://accounts.spotify.com/api/token", encoded_body, headers) do
+    case HTTPoison.post(@token_url, encoded_body, headers) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         %{"access_token" => access_token, "refresh_token" => refresh_token} = Poison.decode!(body)
 
         {:ok, %{access_token: access_token, refresh_token: refresh_token}}
+
+      {:ok, _response} ->
+        {:error, :unauthorized}
+
+      {:error, %HTTPoison.Error{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  def track_info(track_id) do
+    # {:ok, %{duration_ms: 346_013, url: "spotify:track:4nhVsU2AMH8nXG1NXIkzO2"}}
+    case get_token_from_client_credentials() do
+      {:ok, %{access_token: access_token, token_type: token_type}} ->
+        headers = [
+          Authorization: "#{token_type} #{access_token}",
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        ]
+
+        case HTTPoison.get("#{@api_url}/v1/audio-features/#{track_id}", headers) do
+          {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+            %{"duration_ms" => duration_ms, "uri" => uri} = Poison.decode!(body)
+
+            {:ok, %{duration_ms: duration_ms, uri: uri}}
+
+          {:ok, %HTTPoison.Response{body: body}} ->
+            %{"error" => %{"message" => message}} = Poison.decode!(body)
+
+            {:error, message}
+
+          {:error, %HTTPoison.Error{reason: reason}} ->
+            {:error, reason}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp get_token_from_client_credentials do
+    encoded_body = %{grant_type: "client_credentials"} |> URI.encode_query()
+
+    headers = [
+      Authorization: "Basic #{basic_auth_credentials()}",
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json"
+    ]
+
+    case HTTPoison.post(@token_url, encoded_body, headers) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        %{"access_token" => access_token, "token_type" => token_type} = Poison.decode!(body)
+
+        {:ok, %{access_token: access_token, token_type: token_type}}
 
       {:ok, _response} ->
         {:error, :unauthorized}
