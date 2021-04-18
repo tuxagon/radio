@@ -18,6 +18,8 @@ defmodule AgentRadioWeb.Router do
     pipe_through :browser
 
     live "/", PageLive, :index
+    get "/login", SpotifyController, :login
+    get "/callback", SpotifyController, :callback
   end
 
   # Other scopes may use custom stacks.
