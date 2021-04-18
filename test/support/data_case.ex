@@ -1,4 +1,4 @@
-defmodule AgentRadio.DataCase do
+defmodule Radio.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -10,7 +10,7 @@ defmodule AgentRadio.DataCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use AgentRadio.DataCase, async: true`, although
+  by setting `use Radio.DataCase, async: true`, although
   this option is not recommended for other databases.
   """
 
@@ -18,20 +18,20 @@ defmodule AgentRadio.DataCase do
 
   using do
     quote do
-      alias AgentRadio.Repo
+      alias Radio.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import AgentRadio.DataCase
+      import Radio.DataCase
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(AgentRadio.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Radio.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(AgentRadio.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Radio.Repo, {:shared, self()})
     end
 
     :ok

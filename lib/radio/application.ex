@@ -1,4 +1,4 @@
-defmodule AgentRadio.Application do
+defmodule Radio.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
@@ -8,27 +8,27 @@ defmodule AgentRadio.Application do
   def start(_type, _args) do
     children = [
       # Start the Ecto repository
-      AgentRadio.Repo,
+      Radio.Repo,
       # Start the Telemetry supervisor
-      AgentRadioWeb.Telemetry,
+      RadioWeb.Telemetry,
       # Start the PubSub system
-      {Phoenix.PubSub, name: AgentRadio.PubSub},
+      {Phoenix.PubSub, name: Radio.PubSub},
       # Start the Endpoint (http/https)
-      AgentRadioWeb.Endpoint
-      # Start a worker by calling: AgentRadio.Worker.start_link(arg)
-      # {AgentRadio.Worker, arg}
+      RadioWeb.Endpoint
+      # Start a worker by calling: Radio.Worker.start_link(arg)
+      # {Radio.Worker, arg}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: AgentRadio.Supervisor]
+    opts = [strategy: :one_for_one, name: Radio.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.
   def config_change(changed, _new, removed) do
-    AgentRadioWeb.Endpoint.config_change(changed, removed)
+    RadioWeb.Endpoint.config_change(changed, removed)
     :ok
   end
 end

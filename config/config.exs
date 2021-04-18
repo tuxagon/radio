@@ -7,15 +7,15 @@
 # General application configuration
 use Mix.Config
 
-config :agent_radio,
-  ecto_repos: [AgentRadio.Repo]
+config :radio,
+  ecto_repos: [Radio.Repo]
 
 # Configures the endpoint
-config :agent_radio, AgentRadioWeb.Endpoint,
+config :radio, RadioWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "queEUbKeyceMFkOfx8YZ4y3RhGFi75Z7m18yyyKjADMx7pRXexgZNMuRJKyPffvI",
-  render_errors: [view: AgentRadioWeb.ErrorView, accepts: ~w(html json), layout: false],
-  pubsub_server: AgentRadio.PubSub,
+  render_errors: [view: RadioWeb.ErrorView, accepts: ~w(html json), layout: false],
+  pubsub_server: Radio.PubSub,
   live_view: [signing_salt: "NE4Oq6Bq"]
 
 # Configures Elixir's Logger

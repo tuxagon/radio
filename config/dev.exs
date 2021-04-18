@@ -1,10 +1,10 @@
 use Mix.Config
 
 # Configure your database
-config :agent_radio, AgentRadio.Repo,
+config :radio, Radio.Repo,
   username: "postgres",
   password: "postgres",
-  database: "agent_radio_dev",
+  database: "radio_dev",
   hostname: "localhost",
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -15,7 +15,7 @@ config :agent_radio, AgentRadio.Repo,
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
-config :agent_radio, AgentRadioWeb.Endpoint,
+config :radio, RadioWeb.Endpoint,
   http: [port: 4000],
   debug_errors: true,
   code_reloader: true,
@@ -55,13 +55,13 @@ config :agent_radio, AgentRadioWeb.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
-config :agent_radio, AgentRadioWeb.Endpoint,
+config :radio, RadioWeb.Endpoint,
   live_reload: [
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/agent_radio_web/(live|views)/.*(ex)$",
-      ~r"lib/agent_radio_web/templates/.*(eex)$"
+      ~r"lib/radio_web/(live|views)/.*(ex)$",
+      ~r"lib/radio_web/templates/.*(eex)$"
     ]
   ]
 

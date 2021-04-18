@@ -1,4 +1,4 @@
-defmodule AgentRadioWeb.ErrorHelpers do
+defmodule RadioWeb.ErrorHelpers do
   @moduledoc """
   Conveniences for translating and building error messages.
   """
@@ -39,9 +39,9 @@ defmodule AgentRadioWeb.ErrorHelpers do
     # should be written to the errors.po file. The :count option is
     # set by Ecto and indicates we should also apply plural rules.
     if count = opts[:count] do
-      Gettext.dngettext(AgentRadioWeb.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(RadioWeb.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(AgentRadioWeb.Gettext, "errors", msg, opts)
+      Gettext.dgettext(RadioWeb.Gettext, "errors", msg, opts)
     end
   end
 end

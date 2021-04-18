@@ -1,4 +1,4 @@
-defmodule AgentRadio.Spotify do
+defmodule Radio.Spotify do
   @api_url "https://api.spotify.com"
   @token_url "https://accounts.spotify.com/api/token"
 

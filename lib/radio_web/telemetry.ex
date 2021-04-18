@@ -1,4 +1,4 @@
-defmodule AgentRadioWeb.Telemetry do
+defmodule RadioWeb.Telemetry do
   use Supervisor
   import Telemetry.Metrics
 
@@ -31,11 +31,11 @@ defmodule AgentRadioWeb.Telemetry do
       ),
 
       # Database Metrics
-      summary("agent_radio.repo.query.total_time", unit: {:native, :millisecond}),
-      summary("agent_radio.repo.query.decode_time", unit: {:native, :millisecond}),
-      summary("agent_radio.repo.query.query_time", unit: {:native, :millisecond}),
-      summary("agent_radio.repo.query.queue_time", unit: {:native, :millisecond}),
-      summary("agent_radio.repo.query.idle_time", unit: {:native, :millisecond}),
+      summary("radio.repo.query.total_time", unit: {:native, :millisecond}),
+      summary("radio.repo.query.decode_time", unit: {:native, :millisecond}),
+      summary("radio.repo.query.query_time", unit: {:native, :millisecond}),
+      summary("radio.repo.query.queue_time", unit: {:native, :millisecond}),
+      summary("radio.repo.query.idle_time", unit: {:native, :millisecond}),
 
       # VM Metrics
       summary("vm.memory.total", unit: {:byte, :kilobyte}),
@@ -49,7 +49,7 @@ defmodule AgentRadioWeb.Telemetry do
     [
       # A module, function and arguments to be invoked periodically.
       # This function must call :telemetry.execute/3 and a metric must be added above.
-      # {AgentRadioWeb, :count_users, []}
+      # {RadioWeb, :count_users, []}
     ]
   end
 end

@@ -1,5 +1,5 @@
-defmodule AgentRadioWeb.LayoutViewTest do
-  use AgentRadioWeb.ConnCase, async: true
+defmodule RadioWeb.LayoutViewTest do
+  use RadioWeb.ConnCase, async: true
 
   # When testing helpers, you may want to import Phoenix.HTML and
   # use functions such as safe_to_string() to convert the helper

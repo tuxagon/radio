@@ -1,16 +1,16 @@
-defmodule AgentRadioWeb.Endpoint do
-  use Phoenix.Endpoint, otp_app: :agent_radio
+defmodule RadioWeb.Endpoint do
+  use Phoenix.Endpoint, otp_app: :radio
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
   @session_options [
     store: :cookie,
-    key: "_agent_radio_key",
+    key: "_radio_key",
     signing_salt: "Wa8rz1A7"
   ]
 
-  socket "/socket", AgentRadioWeb.UserSocket,
+  socket "/socket", RadioWeb.UserSocket,
     websocket: true,
     longpoll: false
 
@@ -22,7 +22,7 @@ defmodule AgentRadioWeb.Endpoint do
   # when deploying your static files in production.
   plug Plug.Static,
     at: "/",
-    from: :agent_radio,
+    from: :radio,
     gzip: false,
     only: ~w(css fonts images js favicon.ico robots.txt)
 
@@ -32,7 +32,7 @@ defmodule AgentRadioWeb.Endpoint do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
-    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :agent_radio
+    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :radio
   end
 
   plug Phoenix.LiveDashboard.RequestLogger,
@@ -50,5 +50,5 @@ defmodule AgentRadioWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
-  plug AgentRadioWeb.Router
+  plug RadioWeb.Router
 end

@@ -1,2 +1,2 @@
 ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(AgentRadio.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(Radio.Repo, :manual)

@@ -1,6 +1,6 @@
-defmodule AgentRadio do
+defmodule Radio do
   @moduledoc """
-  AgentRadio keeps the contexts that define your domain
+  Radio keeps the contexts that define your domain
   and business logic.
 
   Contexts are also responsible for managing your data, regardless

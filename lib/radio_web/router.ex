@@ -1,11 +1,11 @@
-defmodule AgentRadioWeb.Router do
-  use AgentRadioWeb, :router
+defmodule RadioWeb.Router do
+  use RadioWeb, :router
 
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {AgentRadioWeb.LayoutView, :root}
+    plug :put_root_layout, {RadioWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -14,7 +14,7 @@ defmodule AgentRadioWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", AgentRadioWeb do
+  scope "/", RadioWeb do
     pipe_through :browser
 
     live "/", PageLive, :index
@@ -23,7 +23,7 @@ defmodule AgentRadioWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", AgentRadioWeb do
+  # scope "/api", RadioWeb do
   #   pipe_through :api
   # end
 
@@ -39,7 +39,7 @@ defmodule AgentRadioWeb.Router do
 
     scope "/" do
       pipe_through :browser
-      live_dashboard "/dashboard", metrics: AgentRadioWeb.Telemetry
+      live_dashboard "/dashboard", metrics: RadioWeb.Telemetry
     end
   end
 end

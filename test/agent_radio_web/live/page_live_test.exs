@@ -1,5 +1,5 @@
-defmodule AgentRadioWeb.PageLiveTest do
-  use AgentRadioWeb.ConnCase
+defmodule RadioWeb.PageLiveTest do
+  use RadioWeb.ConnCase
 
   import Phoenix.LiveViewTest
 

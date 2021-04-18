@@ -1,7 +1,7 @@
-defmodule AgentRadioWeb.SpotifyController do
-  use AgentRadioWeb, :controller
+defmodule RadioWeb.SpotifyController do
+  use RadioWeb, :controller
 
-  alias AgentRadio.Spotify
+  alias Radio.Spotify
 
   def login(conn, _params) do
     %{url: authorize_url, state: auth_state} = Spotify.authorize_url()

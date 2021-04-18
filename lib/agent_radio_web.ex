@@ -1,12 +1,12 @@
-defmodule AgentRadioWeb do
+defmodule RadioWeb do
   @moduledoc """
   The entrypoint for defining your web interface, such
   as controllers, views, channels and so on.
 
   This can be used in your application as:
 
-      use AgentRadioWeb, :controller
-      use AgentRadioWeb, :view
+      use RadioWeb, :controller
+      use RadioWeb, :view
 
   The definitions below will be executed for every view,
   controller, etc, so keep them short and clean, focused
@@ -19,19 +19,19 @@ defmodule AgentRadioWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: AgentRadioWeb
+      use Phoenix.Controller, namespace: RadioWeb
 
       import Plug.Conn
-      import AgentRadioWeb.Gettext
-      alias AgentRadioWeb.Router.Helpers, as: Routes
+      import RadioWeb.Gettext
+      alias RadioWeb.Router.Helpers, as: Routes
     end
   end
 
   def view do
     quote do
       use Phoenix.View,
-        root: "lib/agent_radio_web/templates",
-        namespace: AgentRadioWeb
+        root: "lib/radio_web/templates",
+        namespace: RadioWeb
 
       # Import convenience functions from controllers
       import Phoenix.Controller,
@@ -45,7 +45,7 @@ defmodule AgentRadioWeb do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {AgentRadioWeb.LayoutView, "live.html"}
+        layout: {RadioWeb.LayoutView, "live.html"}
 
       unquote(view_helpers())
     end
@@ -72,7 +72,7 @@ defmodule AgentRadioWeb do
   def channel do
     quote do
       use Phoenix.Channel
-      import AgentRadioWeb.Gettext
+      import RadioWeb.Gettext
     end
   end
 
@@ -87,9 +87,9 @@ defmodule AgentRadioWeb do
       # Import basic rendering functionality (render, render_layout, etc)
       import Phoenix.View
 
-      import AgentRadioWeb.ErrorHelpers
-      import AgentRadioWeb.Gettext
-      alias AgentRadioWeb.Router.Helpers, as: Routes
+      import RadioWeb.ErrorHelpers
+      import RadioWeb.Gettext
+      alias RadioWeb.Router.Helpers, as: Routes
     end
   end
 

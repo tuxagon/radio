@@ -1,5 +1,5 @@
-defmodule AgentRadio.Repo do
+defmodule Radio.Repo do
   use Ecto.Repo,
-    otp_app: :agent_radio,
+    otp_app: :radio,
     adapter: Ecto.Adapters.Postgres
 end

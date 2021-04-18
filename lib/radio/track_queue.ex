@@ -1,7 +1,7 @@
-defmodule AgentRadio.TrackQueue do
+defmodule Radio.TrackQueue do
   use GenServer
 
-  alias AgentRadio.Spotify
+  alias Radio.Spotify
 
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, :ok, opts)

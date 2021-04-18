@@ -1,9 +1,9 @@
-defmodule AgentRadio.MixProject do
+defmodule Radio.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :agent_radio,
+      app: :radio,
       version: "0.1.0",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -19,7 +19,7 @@ defmodule AgentRadio.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {AgentRadio.Application, []},
+      mod: {Radio.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end

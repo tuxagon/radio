@@ -1,4 +1,4 @@
-defmodule AgentRadioWeb.ChannelCase do
+defmodule RadioWeb.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -11,7 +11,7 @@ defmodule AgentRadioWeb.ChannelCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use AgentRadioWeb.ChannelCase, async: true`, although
+  by setting `use RadioWeb.ChannelCase, async: true`, although
   this option is not recommended for other databases.
   """
 
@@ -21,18 +21,18 @@ defmodule AgentRadioWeb.ChannelCase do
     quote do
       # Import conveniences for testing with channels
       import Phoenix.ChannelTest
-      import AgentRadioWeb.ChannelCase
+      import RadioWeb.ChannelCase
 
       # The default endpoint for testing
-      @endpoint AgentRadioWeb.Endpoint
+      @endpoint RadioWeb.Endpoint
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(AgentRadio.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Radio.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(AgentRadio.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Radio.Repo, {:shared, self()})
     end
 
     :ok

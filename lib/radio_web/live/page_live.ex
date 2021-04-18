@@ -1,5 +1,5 @@
-defmodule AgentRadioWeb.PageLive do
-  use AgentRadioWeb, :live_view
+defmodule RadioWeb.PageLive do
+  use RadioWeb, :live_view
 
   @impl true
   def mount(_params, _session, socket) do
@@ -26,7 +26,7 @@ defmodule AgentRadioWeb.PageLive do
   end
 
   defp search(query) do
-    if not AgentRadioWeb.Endpoint.config(:code_reloader) do
+    if not RadioWeb.Endpoint.config(:code_reloader) do
       raise "action disabled when not in development"
     end
 
