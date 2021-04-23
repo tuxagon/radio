@@ -20,11 +20,16 @@ defmodule RadioWeb.SpotifyController do
       clear_session(conn)
 
       case Spotify.get_token_from_authorization_code(code) do
-        {:ok, %{access_token: access_token, refresh_token: refresh_token}} ->
+        {:ok, %Radio.TokenInfo{} = token_info} ->
+          IO.puts(token_info.access_token)
+
+          {:ok, user} = Spotify.user_profile(token_info)
+
           conn
-          |> put_session(:access_token, access_token)
-          |> put_session(:refresh_token, refresh_token)
-          |> redirect(to: "/")
+          |> put_session(:token_info, token_info)
+          |> put_session(:spotify_user, user)
+          # TODO replace with something dynamic
+          |> redirect(to: "/radio/test")
 
         {:error, _reason} ->
           redirect(conn, to: "/?error=invalid_token")

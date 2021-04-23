@@ -14,9 +14,11 @@ defmodule Radio.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: Radio.PubSub},
       # Start the Endpoint (http/https)
-      RadioWeb.Endpoint
+      RadioWeb.Endpoint,
       # Start a worker by calling: Radio.Worker.start_link(arg)
       # {Radio.Worker, arg}
+      {Radio.DeviceRegistry, name: Radio.DeviceRegistry},
+      {Radio.StationRegistry, name: Radio.StationRegistry}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

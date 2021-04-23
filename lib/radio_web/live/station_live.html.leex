@@ -1,0 +1,28 @@
+<section class="phx-hero">
+  <h1><%= gettext "%{name} radio", name: @station %></h1>
+
+  <form phx-submit="queue">
+    <input type="text" name="song_link" value="" placeholder="Spotify Song Link" autocomplete="off"/>
+    <button type="submit" phx-disable-with="Queuing...">Add to Station Queue</button>
+  </form>
+
+  <%= Enum.map(@devices, fn %{"name" => name, "id" => id} -> %>
+    <button phx-click="play-on" phx-value-id="<%= id %>" phx-value-name="<%= name %>">
+      Play On <%= name %>
+    </button>
+  <% end) %>
+
+  <%= case @current_track do %>
+    <%= nil -> %>
+      <p>No tracks queued</p>
+    <% %{uri: uri} -> %>
+      <p>Current track is <strong><%= uri %></strong>
+  <% end %>
+
+  <ol>
+    <%= Enum.map(@upcoming_tracks, fn %{uri: uri} -> %>
+        <li><%= uri %></li>
+    <% end) %>
+  </ol>
+
+</section>

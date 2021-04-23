@@ -1,4 +1,9 @@
 defmodule Radio.Spotify do
+  @json_headers [
+    Accept: "application/json",
+    "Content-Type": "application/json"
+  ]
+
   @api_url "https://api.spotify.com"
   @token_url "https://accounts.spotify.com/api/token"
 
@@ -7,7 +12,16 @@ defmodule Radio.Spotify do
 
     auth_state = auth_state_token()
 
-    scope = ["streaming", "user-read-email", "user-read-private"] |> Enum.join(" ")
+    scope =
+      [
+        "streaming",
+        "user-read-email",
+        "user-read-private",
+        "user-read-playback-state",
+        "user-modify-playback-state",
+        "user-read-currently-playing"
+      ]
+      |> Enum.join(" ")
 
     params =
       %{
@@ -20,6 +34,50 @@ defmodule Radio.Spotify do
       |> URI.encode_query()
 
     %{url: "https://accounts.spotify.com/authorize?#{params}", state: auth_state}
+  end
+
+  def track_id_from_song_link(song_link) do
+    %URI{path: path} = URI.parse(song_link)
+    String.replace_prefix(path, "/track/", "")
+  end
+
+  def valid_song_link?(song_link) do
+    case URI.parse(song_link) do
+      %URI{host: "open.spotify.com"} ->
+        true
+
+      _ ->
+        false
+    end
+  end
+
+  def get_devices(access_token) do
+    headers = [
+      Accept: "application/json",
+      Authorization: "Bearer #{access_token}"
+    ]
+
+    handle_response(
+      HTTPoison.get("#{@api_url}/v1/me/player/devices", headers),
+      fn %{"devices" => devices} ->
+        devices
+      end
+    )
+  end
+
+  def play_on_device(access_token, device_id, uri) do
+    {:error, :not_implemented}
+  end
+
+  def user_profile(%Radio.TokenInfo{} = token_info) do
+    headers = build_user_api_headers(token_info)
+
+    handle_response(
+      HTTPoison.get("#{@api_url}/v1/me", headers),
+      fn %{"id" => id, "display_name" => display_name} ->
+        %Radio.SpotifyUser{id: id, display_name: display_name}
+      end
+    )
   end
 
   def get_token_from_authorization_code(code) do
@@ -39,18 +97,20 @@ defmodule Radio.Spotify do
       Accept: "application/json"
     ]
 
-    case HTTPoison.post(@token_url, encoded_body, headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        %{"access_token" => access_token, "refresh_token" => refresh_token} = Poison.decode!(body)
-
-        {:ok, %{access_token: access_token, refresh_token: refresh_token}}
-
-      {:ok, _response} ->
-        {:error, :unauthorized}
-
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        {:error, reason}
-    end
+    handle_response(
+      HTTPoison.post(@token_url, encoded_body, headers),
+      fn %{
+           "access_token" => access_token,
+           "refresh_token" => refresh_token,
+           "token_type" => token_type
+         } ->
+        %Radio.TokenInfo{
+          access_token: access_token,
+          refresh_token: refresh_token,
+          token_type: token_type
+        }
+      end
+    )
   end
 
   def track_info(track_id) do
@@ -104,6 +164,23 @@ defmodule Radio.Spotify do
       {:error, %HTTPoison.Error{reason: reason}} ->
         {:error, reason}
     end
+  end
+
+  defp handle_response(response, success_fn) do
+    case response do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        {:ok, success_fn.(Poison.decode!(body))}
+
+      {:ok, _response} ->
+        {:error, :unauthorized}
+
+      {:error, %HTTPoison.Error{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  defp build_user_api_headers(%Radio.TokenInfo{access_token: access_token, token_type: token_type}) do
+    [{:Authorization, "#{token_type} #{access_token}"} | @json_headers]
   end
 
   defp basic_auth_credentials do

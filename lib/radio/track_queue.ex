@@ -15,6 +15,10 @@ defmodule Radio.TrackQueue do
     GenServer.call(server, :current_queue)
   end
 
+  def play_on(server, device_id, token_info) do
+    GenServer.cast(server, {:play_on, device_id, token_info})
+  end
+
   @impl true
   def init(:ok) do
     {:ok, :queue.new()}
