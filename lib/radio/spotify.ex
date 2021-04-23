@@ -51,6 +51,32 @@ defmodule Radio.Spotify do
     end
   end
 
+  def refresh_token(refresh_token) do
+    encoded_body =
+      %{grant_type: "refresh_token", refresh_token: refresh_token} |> URI.encode_query()
+
+    headers = [
+      Authorization: "Basic #{basic_auth_credentials()}",
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json"
+    ]
+
+    handle_response(
+      HTTPoison.post(@token_url, encoded_body, headers),
+      fn %{
+           "access_token" => access_token,
+           "refresh_token" => refresh_token,
+           "token_type" => token_type
+         } ->
+        %Radio.TokenInfo{
+          access_token: access_token,
+          refresh_token: refresh_token,
+          token_type: token_type
+        }
+      end
+    )
+  end
+
   def get_devices(access_token) do
     headers = [
       Accept: "application/json",

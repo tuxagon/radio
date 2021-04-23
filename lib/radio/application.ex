@@ -18,7 +18,8 @@ defmodule Radio.Application do
       # Start a worker by calling: Radio.Worker.start_link(arg)
       # {Radio.Worker, arg}
       {Radio.DeviceRegistry, name: Radio.DeviceRegistry},
-      {Radio.StationRegistry, name: Radio.StationRegistry}
+      {Radio.StationRegistry, name: Radio.StationRegistry},
+      {Radio.TokenStore, name: Radio.TokenStore}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
