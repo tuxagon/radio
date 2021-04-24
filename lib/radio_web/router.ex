@@ -22,6 +22,8 @@ defmodule RadioWeb.Router do
 
     get "/login", SpotifyController, :login
     get "/callback", SpotifyController, :callback
+    get "/token", SpotifyController, :token
+    post "/refresh", SpotifyController, :refresh
   end
 
   # Other scopes may use custom stacks.

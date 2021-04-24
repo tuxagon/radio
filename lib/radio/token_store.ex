@@ -54,4 +54,18 @@ defmodule Radio.TokenStore do
         {:reply, {:error, :no_token}, token_store}
     end
   end
+
+  @impl true
+  def handle_info({:refresh, %Radio.TokenInfo{refresh_token: refresh_token}}, token_store) do
+    case Radio.SpotifyApi.refresh_token(refresh_token) do
+      {:ok, %Radio.TokenInfo{} = token_info} ->
+        refresh_duration_ms = div(token_info.expires_in, 2) * 1000
+        Process.send_after(self(), {:refresh, token_info}, refresh_duration_ms)
+
+        {:noreply, token_store}
+
+      _ ->
+        {:noreply, token_store}
+    end
+  end
 end

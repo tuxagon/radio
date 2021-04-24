@@ -7,7 +7,7 @@
   </form>
 
   <%= Enum.map(@devices, fn %{"name" => name, "id" => id} -> %>
-    <button phx-click="play-on" phx-value-id="<%= id %>" phx-value-name="<%= name %>">
+    <button id="play-on-<%= id %>" phx-hook="PlayOn" data-device-id="<%= id %>" data-device-name="<%= name %>">
       Play On <%= name %>
     </button>
   <% end) %>

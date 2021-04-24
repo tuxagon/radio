@@ -23,6 +23,9 @@ defmodule RadioWeb.SpotifyController do
         {:ok, %Radio.TokenInfo{} = token_info} ->
           IO.puts(token_info.access_token)
 
+          # refresh_duration_ms = div(token_info.expires_in, 2) * 1000
+          # Process.send_after(Radio.TokenStore, {:refresh, token_info}, refresh_duration_ms)
+
           {:ok, user} = SpotifyApi.user_profile(token_info)
 
           conn
@@ -35,5 +38,19 @@ defmodule RadioWeb.SpotifyController do
           redirect(conn, to: "/?error=invalid_token")
       end
     end
+  end
+
+  def token(conn, _params) do
+    case get_session(conn, :token_info) do
+      %Radio.TokenInfo{access_token: access_token} ->
+        json(conn, access_token)
+
+      _ ->
+        conn |> put_status(:not_found)
+    end
+  end
+
+  def refresh(conn, _params) do
+    text(conn, "todo")
   end
 end

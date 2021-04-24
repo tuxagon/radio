@@ -45,6 +45,18 @@ defmodule Radio.TrackQueue do
   end
 
   @impl true
+  def handle_cast({:play_on, device_id, token_info}, track_queue) do
+    uris =
+      track_queue
+      |> :queue.to_list()
+      |> Enum.map(fn %{uri: uri} -> uri end)
+
+    {:ok, _} = SpotifyApi.play_on_device(token_info.access_token, device_id, uris)
+
+    {:noreply, track_queue}
+  end
+
+  @impl true
   def handle_info(:next_track, track_queue) do
     {_, q} = :queue.out(track_queue)
 

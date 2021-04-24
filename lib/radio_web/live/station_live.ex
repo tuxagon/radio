@@ -67,12 +67,16 @@ defmodule RadioWeb.StationLive do
   end
 
   @impl true
-  def handle_event("play-on", %{"id" => device_id, "name" => device_name}, socket) do
+  def handle_event(
+        "play-on",
+        %{"token" => access_token, "id" => device_id, "name" => device_name} = _params,
+        socket
+      ) do
     %{station: name} = socket.assigns
 
-    # {:ok, station} = Radio.StationRegistry.lookup(Radio.StationRegistry, name)
+    {:ok, station} = Radio.StationRegistry.lookup(Radio.StationRegistry, name)
 
-    # Radio.TrackQueue.play_on(station, device_id, %{})
+    Radio.TrackQueue.play_on(station, device_id, %Radio.TokenInfo{access_token: access_token})
 
     {:noreply, socket |> put_flash(:success, "Sending to #{device_name}")}
   end

@@ -20,7 +20,30 @@ import { LiveSocket } from "phoenix_live_view";
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
+
+const tokenWorker = new Worker("/js/worker.js");
+
+let Hooks = {};
+Hooks.PlayOn = {
+  mounted() {
+    this.el.addEventListener("click", (e) => {
+      const { deviceId, deviceName } = e.target.dataset;
+
+      let self = this;
+
+      tokenWorker.onmessage = function (e) {
+        const { token } = e.data;
+
+        self.pushEvent("play-on", { token, id: deviceId, name: deviceName });
+      };
+
+      tokenWorker.postMessage([]);
+    });
+  },
+};
+
 let liveSocket = new LiveSocket("/live", Socket, {
+  hooks: Hooks,
   params: { _csrf_token: csrfToken },
 });
 
