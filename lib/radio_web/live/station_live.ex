@@ -20,7 +20,7 @@ defmodule RadioWeb.StationLive do
     track_list = Radio.TrackQueue.current_queue(station)
 
     devices =
-      case Radio.Spotify.get_devices(token_info.access_token) do
+      case Radio.SpotifyApi.get_devices(token_info.access_token) do
         {:ok, devices} ->
           devices
 
@@ -49,8 +49,8 @@ defmodule RadioWeb.StationLive do
          |> put_flash(:error, "Missing Song Link")}
 
       song_link ->
-        if Radio.Spotify.valid_song_link?(song_link) do
-          track_id = Radio.Spotify.track_id_from_song_link(song_link)
+        if Radio.SpotifyApi.valid_song_link?(song_link) do
+          track_id = Radio.SpotifyApi.track_id_from_song_link(song_link)
 
           Radio.StationRegistry.queue_track(Radio.StationRegistry, name, track_id)
 

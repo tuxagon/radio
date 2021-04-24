@@ -1,4 +1,4 @@
-defmodule Radio.Spotify do
+defmodule Radio.SpotifyApi do
   @json_headers [
     Accept: "application/json",
     "Content-Type": "application/json"

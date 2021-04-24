@@ -1,7 +1,7 @@
 defmodule Radio.DeviceRegistry do
   use GenServer
 
-  alias Radio.Spotify
+  alias Radio.SpotifyApi
 
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, :ok, opts)
@@ -18,7 +18,7 @@ defmodule Radio.DeviceRegistry do
 
   @impl true
   def handle_call({:get_devices, token_info}, _from, known_devices) do
-    case Spotify.get_devices(token_info.access_token) do
+    case SpotifyApi.get_devices(token_info.access_token) do
       {:ok, devices} ->
         {:reply, devices, known_devices}
 

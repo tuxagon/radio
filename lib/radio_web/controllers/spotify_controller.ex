@@ -1,10 +1,10 @@
 defmodule RadioWeb.SpotifyController do
   use RadioWeb, :controller
 
-  alias Radio.Spotify
+  alias Radio.SpotifyApi
 
   def login(conn, _params) do
-    %{url: authorize_url, state: auth_state} = Spotify.authorize_url()
+    %{url: authorize_url, state: auth_state} = SpotifyApi.authorize_url()
 
     conn
     |> put_session(:spotify_auth_state, auth_state)
@@ -19,11 +19,11 @@ defmodule RadioWeb.SpotifyController do
     else
       clear_session(conn)
 
-      case Spotify.get_token_from_authorization_code(code) do
+      case SpotifyApi.get_token_from_authorization_code(code) do
         {:ok, %Radio.TokenInfo{} = token_info} ->
           IO.puts(token_info.access_token)
 
-          {:ok, user} = Spotify.user_profile(token_info)
+          {:ok, user} = SpotifyApi.user_profile(token_info)
 
           conn
           |> put_session(:token_info, token_info)

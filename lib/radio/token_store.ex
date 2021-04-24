@@ -42,7 +42,7 @@ defmodule Radio.TokenStore do
   def handle_call({:refresh, user_id}, _from, token_store) do
     case Map.get(token_store, user_id) do
       %{refresh_token: refresh_token} ->
-        case Radio.Spotify.refresh_token(refresh_token) do
+        case Radio.SpotifyApi.refresh_token(refresh_token) do
           {:ok, %Radio.TokenInfo{access_token: access_token} = token_info} ->
             {:reply, {:ok, access_token}, Map.put(token_store, user_id, token_info)}
 
