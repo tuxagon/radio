@@ -11,7 +11,7 @@ defmodule RadioWeb.StationLive do
       ) do
     # ensure the radio station exists when someone visits the URL
     station_name = String.trim(name)
-    {:ok, station} = Radio.StationRegistry.lookup(Radio.StationRegistry, station_name)
+    {:ok, station} = Radio.StationRegistry.lookup(station_name)
 
     if connected?(socket) do
       PubSub.subscribe(Radio.PubSub, "station:#{station_name}")
@@ -52,7 +52,7 @@ defmodule RadioWeb.StationLive do
         if Radio.SpotifyApi.valid_song_link?(song_link) do
           track_id = Radio.SpotifyApi.track_id_from_song_link(song_link)
 
-          Radio.StationRegistry.queue_track(Radio.StationRegistry, name, track_id)
+          Radio.StationRegistry.queue_track(name, track_id)
 
           {:noreply,
            socket
@@ -74,7 +74,7 @@ defmodule RadioWeb.StationLive do
       ) do
     %{station: name} = socket.assigns
 
-    {:ok, station} = Radio.StationRegistry.lookup(Radio.StationRegistry, name)
+    {:ok, station} = Radio.StationRegistry.lookup(name)
 
     Radio.TrackQueue.play_on(station, device_id, %Radio.TokenInfo{access_token: access_token})
 

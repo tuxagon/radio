@@ -1,19 +1,21 @@
 defmodule Radio.StationRegistry do
   use GenServer
 
+  @me __MODULE__
+
   def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, :ok, opts)
+    GenServer.start_link(__MODULE__, :ok, Keyword.put_new(opts, :name, @me))
   end
 
-  def lookup(server, station_name) do
+  def lookup(server \\ @me, station_name) do
     GenServer.call(server, {:lookup, station_name})
   end
 
-  def queue_track(server, name, track_id) do
+  def queue_track(server \\ @me, name, track_id) do
     GenServer.cast(server, {:queue_track, name, track_id})
   end
 
-  def upcoming(server, name) do
+  def upcoming(server \\ @me, name) do
     GenServer.call(server, {:upcoming, name})
   end
 
@@ -39,7 +41,7 @@ defmodule Radio.StationRegistry do
 
     track_list = Radio.TrackQueue.current_queue(station)
 
-    {:reply, {:ok, track_list}, stations}
+    {:reply, track_list, stations}
   end
 
   @impl true
