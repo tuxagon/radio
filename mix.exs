@@ -48,7 +48,8 @@ defmodule Radio.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:httpoison, "~> 1.8"},
-      {:poison, "~> 3.1"}
+      {:poison, "~> 3.1"},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 

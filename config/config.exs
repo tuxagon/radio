@@ -18,6 +18,10 @@ config :radio, RadioWeb.Endpoint,
   pubsub_server: Radio.PubSub,
   live_view: [signing_salt: "NE4Oq6Bq"]
 
+config :radio, :spotify, redirect_uri: "http://localhost:4000/callback"
+
+config :radio, :spotify_api, Radio.Spotify.ApiClient
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

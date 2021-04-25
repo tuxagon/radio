@@ -162,59 +162,6 @@ defmodule Radio.SpotifyApi do
     )
   end
 
-  def track_info(track_id) do
-    # {:ok, %{duration_ms: 346_013, url: "spotify:track:4nhVsU2AMH8nXG1NXIkzO2"}}
-    case get_token_from_client_credentials() do
-      {:ok, %{access_token: access_token, token_type: token_type}} ->
-        headers = [
-          Authorization: "#{token_type} #{access_token}",
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        ]
-
-        case HTTPoison.get("#{@api_url}/v1/audio-features/#{track_id}", headers) do
-          {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-            %{"duration_ms" => duration_ms, "uri" => uri} = Poison.decode!(body)
-
-            {:ok, %{duration_ms: duration_ms, uri: uri}}
-
-          {:ok, %HTTPoison.Response{body: body}} ->
-            %{"error" => %{"message" => message}} = Poison.decode!(body)
-
-            {:error, message}
-
-          {:error, %HTTPoison.Error{reason: reason}} ->
-            {:error, reason}
-        end
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  defp get_token_from_client_credentials do
-    encoded_body = %{grant_type: "client_credentials"} |> URI.encode_query()
-
-    headers = [
-      Authorization: "Basic #{basic_auth_credentials()}",
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json"
-    ]
-
-    case HTTPoison.post(@token_url, encoded_body, headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        %{"access_token" => access_token, "token_type" => token_type} = Poison.decode!(body)
-
-        {:ok, %{access_token: access_token, token_type: token_type}}
-
-      {:ok, _response} ->
-        {:error, :unauthorized}
-
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        {:error, reason}
-    end
-  end
-
   defp handle_response(response, success_fn) do
     case response do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->

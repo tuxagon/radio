@@ -2,6 +2,9 @@ defmodule Radio.TrackQueue do
   use GenServer
 
   alias Radio.SpotifyApi
+  alias Radio.Spotify.TrackInfo
+
+  defp api_client, do: Application.get_env(:radio, :spotify_api)
 
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, :ok, opts)
@@ -31,8 +34,8 @@ defmodule Radio.TrackQueue do
 
   @impl true
   def handle_cast({:add_track, track_id}, track_queue) do
-    case SpotifyApi.track_info(track_id) do
-      {:ok, %{duration_ms: duration_ms} = track_info} ->
+    case api_client().get_track(track_id) do
+      {:ok, %TrackInfo{duration_ms: duration_ms} = track_info} ->
         if :queue.is_empty(track_queue) do
           Process.send_after(self(), :next_track, duration_ms)
         end
