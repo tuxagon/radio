@@ -1,5 +1,13 @@
 <section class="phx-hero">
-  <h1><%= gettext "%{name} radio", name: @station %></h1>
+  <h1><%= gettext "%{name} radio", name: @station_name %></h1>
+
+  <p>
+  https://open.spotify.com/track/4EWCNWgDS8707fNSZ1oaA5?si=c18a5e087dd8478d
+  </p>
+
+  <p>
+  <%= @selected_device %>
+  </p>
 
   <form phx-submit="queue">
     <input type="text" name="song_link" value="" placeholder="Spotify Song Link" autocomplete="off"/>
@@ -7,7 +15,11 @@
   </form>
 
   <%= Enum.map(@devices, fn %{"name" => name, "id" => id} -> %>
-    <button id="play-on-<%= id %>" phx-hook="PlayOn" data-device-id="<%= id %>" data-device-name="<%= name %>">
+    <button id="play-on-<%= id %>"
+            phx-hook="PlayOn"
+            data-device-id="<%= id %>"
+            data-device-name="<%= name %>"
+            data-station-name="<%= @station_name %>">
       Play On <%= name %>
     </button>
   <% end) %>
@@ -15,13 +27,13 @@
   <%= case @current_track do %>
     <%= nil -> %>
       <p>No tracks queued</p>
-    <% %{uri: uri} -> %>
-      <p>Current track is <strong><%= uri %></strong>
+    <% %{name: name, uri: uri} -> %>
+      <p data-track-id="<%= uri %>">Current track is <strong><%= name %></strong>
   <% end %>
 
   <ol>
-    <%= Enum.map(@upcoming_tracks, fn %{uri: uri} -> %>
-        <li><%= uri %></li>
+    <%= Enum.map(@upcoming_tracks, fn %{name: name, uri: uri} -> %>
+      <li data-track-uri="<%= uri %>"><%= name %></li>
     <% end) %>
   </ol>
 

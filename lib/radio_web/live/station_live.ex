@@ -6,18 +6,18 @@ defmodule RadioWeb.StationLive do
   @impl true
   def mount(
         %{"station" => name} = _params,
-        %{"token_info" => token_info, "spotify_user" => spotify_user} = _session,
+        %{"token_info" => token_info} = _session,
         socket
       ) do
     # ensure the radio station exists when someone visits the URL
     station_name = String.trim(name)
-    {:ok, station} = Radio.StationRegistry.lookup(station_name)
+    {:ok, _station} = Radio.StationRegistry.lookup(station_name)
 
     if connected?(socket) do
       PubSub.subscribe(Radio.PubSub, "station:#{station_name}")
     end
 
-    track_list = Radio.TrackQueue.current_queue(station)
+    track_list = Radio.StationRegistry.upcoming(station_name)
 
     devices =
       case Radio.SpotifyApi.get_devices(token_info.access_token) do
@@ -28,19 +28,22 @@ defmodule RadioWeb.StationLive do
           []
       end
 
+    IO.inspect(socket.assigns)
+
     {:ok,
-     assign(socket,
-       station: name,
-       spotify_user: spotify_user,
+     socket
+     |> assign(
+       station_name: name,
        devices: devices,
        current_track: List.first(track_list),
-       upcoming_tracks: Enum.drop(track_list, 1)
+       upcoming_tracks: Enum.drop(track_list, 1),
+       selected_device: socket.assigns[:device_id]
      )}
   end
 
   @impl true
   def handle_event("queue", %{"song_link" => song_link}, socket) do
-    %{station: name} = socket.assigns
+    %{station_name: name} = socket.assigns
 
     case String.trim(song_link) do
       "" ->
@@ -67,17 +70,16 @@ defmodule RadioWeb.StationLive do
   end
 
   @impl true
-  def handle_event(
-        "play-on",
-        %{"token" => access_token, "id" => device_id, "name" => device_name} = _params,
-        socket
-      ) do
-    %{station: name} = socket.assigns
+  def handle_event("set-device", params, socket) do
+    case params do
+      %{"device_id" => device_id, "device_name" => device_name} ->
+        {:noreply,
+         socket
+         |> put_flash(:success, "Playing queue on #{device_name}")
+         |> assign(:device_id, device_id)}
 
-    {:ok, station} = Radio.StationRegistry.lookup(name)
-
-    Radio.TrackQueue.play_on(station, device_id, %Radio.TokenInfo{access_token: access_token})
-
-    {:noreply, socket |> put_flash(:success, "Sending to #{device_name}")}
+      _ ->
+        {:noreply, socket}
+    end
   end
 end

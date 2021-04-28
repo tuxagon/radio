@@ -29,7 +29,7 @@ defmodule Radio.StationRegistry do
     if Map.has_key?(stations, name) do
       {:reply, Map.fetch(stations, name), stations}
     else
-      {:ok, station} = Radio.TrackQueue.start_link()
+      {:ok, station} = Radio.TrackQueue.start_link(name, [])
 
       {:reply, {:ok, station}, Map.put(stations, name, station)}
     end

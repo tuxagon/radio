@@ -6,12 +6,33 @@ defmodule Radio.Spotify.ApiClient do
   @api_url "https://api.spotify.com"
   @token_url "https://accounts.spotify.com/api/token"
 
+  alias Radio.Spotify.TokenInfo
   alias Radio.Spotify.TrackInfo
 
   defp client_id, do: Application.get_env(:radio, :spotify)[:client_id]
   defp client_secret, do: Application.get_env(:radio, :spotify)[:client_secret]
   defp redirect_uri, do: Application.get_env(:radio, :spotify)[:redirect_uri]
 
+  @doc """
+  Gets track information from Spotify for a provided `track_id`.
+
+  ## Examples
+
+      iex> Radio.Spotify.ApiClient.get_track("4cOdK2wGLETKBW3PvgPWqT")
+      {:ok,
+      %Radio.Spotify.TrackInfo{
+        artist_names: ["Rick Astley"],
+        duration_ms: 213573,
+        name: "Never Gonna Give You Up",
+        uri: "spotify:track:4cOdK2wGLETKBW3PvgPWqT"
+      }}
+
+  """
+  @spec get_track(String.t()) ::
+          {:error, %{message: any, status: nil | integer}}
+          | {:ok,
+             %Radio.Spotify.TrackInfo{artist_names: list, duration_ms: any, name: any, uri: any}}
+  @impl true
   def get_track(track_id) do
     case exchange_client_credentials_for_token() do
       {:ok, %{"access_token" => access_token, "token_type" => token_type}} ->
@@ -37,6 +58,28 @@ defmodule Radio.Spotify.ApiClient do
     end
   end
 
+  @doc """
+  Starts playback for the list of `uris` on the device specified with `device_id`.
+  """
+  @spec start_playback(Radio.Spotify.TokenInfo.t(), String.t(), [String.t()]) ::
+          :ok | {:error, %{message: any, status: nil | integer}}
+  @impl true
+  def start_playback(%TokenInfo{} = token_info, device_id, uris) do
+    headers = [TokenInfo.authorization_header(token_info) | [json_content(), accept_json()]]
+
+    encoded_body = %{uris: uris} |> Poison.encode!()
+
+    resp = "/v1/me/player/play?device_id=#{device_id}" |> do_api_put(encoded_body, headers)
+
+    case resp do
+      {:ok, _} ->
+        :ok
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   defp exchange_client_credentials_for_token do
     encoded_body = %{grant_type: "client_credentials"} |> URI.encode_query()
 
@@ -51,6 +94,9 @@ defmodule Radio.Spotify.ApiClient do
       {:ok, %{body: body, status_code: 200}} ->
         {:ok, Poison.decode!(body)}
 
+      {:ok, %{body: body, status_code: 204}} ->
+        {:ok, body}
+
       {:ok, %{body: body, status_code: status}} ->
         spotify_error(status, Poison.decode!(body)["message"])
 
@@ -62,6 +108,12 @@ defmodule Radio.Spotify.ApiClient do
   defp do_api_get(url, headers) do
     (@api_url <> url)
     |> get(headers)
+    |> handle_response()
+  end
+
+  defp do_api_put(url, body, headers) do
+    (@api_url <> url)
+    |> put(body, headers)
     |> handle_response()
   end
 

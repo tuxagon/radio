@@ -17,7 +17,6 @@ defmodule Radio.Application do
       RadioWeb.Endpoint,
       # Start a worker by calling: Radio.Worker.start_link(arg)
       # {Radio.Worker, arg}
-      {Radio.DeviceRegistry, name: Radio.DeviceRegistry},
       {Radio.StationRegistry, name: Radio.StationRegistry},
       {Radio.TokenStore, name: Radio.TokenStore}
     ]

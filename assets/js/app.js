@@ -16,6 +16,7 @@ import "phoenix_html";
 import { Socket } from "phoenix";
 import topbar from "topbar";
 import { LiveSocket } from "phoenix_live_view";
+import { playOn } from "./spotify";
 
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
@@ -27,17 +28,13 @@ let Hooks = {};
 Hooks.PlayOn = {
   mounted() {
     this.el.addEventListener("click", (e) => {
-      const { deviceId, deviceName } = e.target.dataset;
+      const { deviceId, deviceName, stationName } = e.target.dataset;
 
-      let self = this;
-
-      tokenWorker.onmessage = function (e) {
-        const { token } = e.data;
-
-        self.pushEvent("play-on", { token, id: deviceId, name: deviceName });
-      };
-
-      tokenWorker.postMessage([]);
+      playOn(deviceId, stationName);
+      this.pushEvent("set-device", {
+        device_id: deviceId,
+        device_name: deviceName,
+      });
     });
   },
 };

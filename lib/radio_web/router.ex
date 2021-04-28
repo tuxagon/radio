@@ -10,6 +10,14 @@ defmodule RadioWeb.Router do
     plug :put_secure_browser_headers
   end
 
+  pipeline :browser_api do
+    plug :accepts, ["json"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -24,6 +32,12 @@ defmodule RadioWeb.Router do
     get "/callback", SpotifyController, :callback
     get "/token", SpotifyController, :token
     post "/refresh", SpotifyController, :refresh
+  end
+
+  scope "/api", RadioWeb do
+    pipe_through :browser_api
+
+    post "/play/:device_id", SpotifyController, :play
   end
 
   # Other scopes may use custom stacks.

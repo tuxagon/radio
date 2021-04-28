@@ -69,7 +69,7 @@ defmodule Radio.SpotifyApi do
            "token_type" => token_type,
            "expires_in" => expires_in
          } ->
-        %Radio.TokenInfo{
+        %Radio.Spotify.TokenInfo{
           access_token: access_token,
           refresh_token: refresh_token,
           token_type: token_type,
@@ -93,30 +93,7 @@ defmodule Radio.SpotifyApi do
     )
   end
 
-  def play_on_device(access_token, device_id, uris) do
-    headers =
-      build_user_api_headers(%Radio.TokenInfo{access_token: access_token, token_type: "Bearer"})
-
-    encoded_body = %{uris: uris} |> Poison.encode!()
-
-    case HTTPoison.put(
-           "#{@api_url}/v1/me/player/play?device_id=#{device_id}",
-           encoded_body,
-           headers
-         ) do
-      {:ok, %HTTPoison.Response{status_code: 204}} ->
-        {:ok, nil}
-
-      {:ok, response} ->
-        IO.inspect(response)
-        {:error, :unauthorized}
-
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        {:error, reason}
-    end
-  end
-
-  def user_profile(%Radio.TokenInfo{} = token_info) do
+  def user_profile(%Radio.Spotify.TokenInfo{} = token_info) do
     headers = build_user_api_headers(token_info)
 
     handle_response(
@@ -152,7 +129,7 @@ defmodule Radio.SpotifyApi do
            "token_type" => token_type,
            "expires_in" => expires_in
          } ->
-        %Radio.TokenInfo{
+        %Radio.Spotify.TokenInfo{
           access_token: access_token,
           refresh_token: refresh_token,
           token_type: token_type,
@@ -175,7 +152,10 @@ defmodule Radio.SpotifyApi do
     end
   end
 
-  defp build_user_api_headers(%Radio.TokenInfo{access_token: access_token, token_type: token_type}) do
+  defp build_user_api_headers(%Radio.Spotify.TokenInfo{
+         access_token: access_token,
+         token_type: token_type
+       }) do
     [{:Authorization, "#{token_type} #{String.replace(access_token, "\"", "")}"} | @json_headers]
   end
 
