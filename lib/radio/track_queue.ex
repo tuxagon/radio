@@ -55,6 +55,8 @@ defmodule Radio.TrackQueue do
           Process.send_after(self(), :next_track, duration_ms)
         end
 
+        Phoenix.PubSub.broadcast(Radio.PubSub, "station:#{name}", {:new_track, track_info})
+
         {:noreply, {name, :queue.in(track_info, track_queue)}}
 
       {:error, _reason} ->
@@ -79,12 +81,16 @@ defmodule Radio.TrackQueue do
     {_, q} = :queue.out(track_queue)
 
     case :queue.peek(q) do
-      {:value, %{duration_ms: duration_ms}} ->
+      {:value, %{duration_ms: duration_ms} = track_info} ->
+        Phoenix.PubSub.broadcast(Radio.PubSub, "station:#{name}", {:next_track, track_info})
+
         Process.send_after(self(), :next_track, duration_ms)
 
         {:noreply, {name, q}}
 
       :empty ->
+        Phoenix.PubSub.broadcast(Radio.PubSub, "station:#{name}", :empty_queue)
+
         {:noreply, {name, q}}
     end
   end
