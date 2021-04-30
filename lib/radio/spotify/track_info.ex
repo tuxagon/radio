@@ -4,4 +4,11 @@ defmodule Radio.Spotify.TrackInfo do
   """
 
   defstruct [:duration_ms, :name, :uri, :artist_names]
+
+  @type t :: %__MODULE__{
+          duration_ms: integer(),
+          name: String.t(),
+          uri: String.t(),
+          artist_names: [String.t()]
+        }
 end

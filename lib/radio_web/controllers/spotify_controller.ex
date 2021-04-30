@@ -1,11 +1,14 @@
 defmodule RadioWeb.SpotifyController do
   use RadioWeb, :controller
 
+  alias Radio.Spotify
   alias Radio.Spotify.TokenInfo
-  alias Radio.SpotifyApi
+
+  @spec api_client() :: module()
+  def api_client, do: Application.get_env(:radio, :spotify_api)
 
   def login(conn, _params) do
-    %{url: authorize_url, state: auth_state} = SpotifyApi.authorize_url()
+    %{url: authorize_url, state: auth_state} = Spotify.authorize_url()
 
     conn
     |> put_session(:spotify_auth_state, auth_state)
@@ -20,21 +23,17 @@ defmodule RadioWeb.SpotifyController do
     else
       conn = clear_session(conn)
 
-      case SpotifyApi.get_token_from_authorization_code(code) do
-        {:ok, %TokenInfo{} = token_info} ->
-          IO.puts(token_info.access_token)
+      with {:ok, token_info} <- api_client().exchange_auth_code_for_token(code),
+           {:ok, user} <- api_client().get_my_user(token_info) do
+        IO.puts(token_info.access_token)
 
-          # refresh_duration_ms = div(token_info.expires_in, 2) * 1000
-          # Process.send_after(Radio.TokenStore, {:refresh, token_info}, refresh_duration_ms)
-
-          {:ok, _user} = SpotifyApi.user_profile(token_info)
-
-          conn
-          |> put_session(:token_info, token_info)
-          # TODO replace with something dynamic
-          |> redirect(to: "/radio/test")
-
-        {:error, _reason} ->
+        conn
+        |> assign(:user, user)
+        |> put_session(:token_info, token_info)
+        # TODO replace with something dynamic
+        |> redirect(to: "radio/test")
+      else
+        _ ->
           redirect(conn, to: "/?error=invalid_token")
       end
     end
@@ -59,8 +58,21 @@ defmodule RadioWeb.SpotifyController do
 
     {:ok, station} = Radio.StationRegistry.lookup(station_name)
 
-    Radio.TrackQueue.play_on(station, device_id, token_info)
+    conn
+    |> json(%{device_id: device_id})
+    |> handle_result(Radio.TrackQueue.play_on(station, device_id, token_info))
+  end
 
-    conn |> json(%{device_id: device_id})
+  defp handle_result(conn, result) do
+    case result do
+      {:ok, _body} ->
+        conn
+
+      {:error, %{status: 401}} ->
+        conn |> put_status(:unauthorized)
+
+      {:error, _reason} ->
+        conn |> put_status(:failed_dependency)
+    end
   end
 end

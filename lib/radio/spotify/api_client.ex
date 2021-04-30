@@ -8,6 +8,7 @@ defmodule Radio.Spotify.ApiClient do
 
   alias Radio.Spotify.TokenInfo
   alias Radio.Spotify.TrackInfo
+  alias Radio.Spotify.User
 
   defp client_id, do: Application.get_env(:radio, :spotify)[:client_id]
   defp client_secret, do: Application.get_env(:radio, :spotify)[:client_secret]
@@ -29,9 +30,7 @@ defmodule Radio.Spotify.ApiClient do
 
   """
   @spec get_track(String.t()) ::
-          {:error, %{message: any, status: nil | integer}}
-          | {:ok,
-             %Radio.Spotify.TrackInfo{artist_names: list, duration_ms: any, name: any, uri: any}}
+          {:ok, Radio.Spotify.TrackInfo.t()} | Radio.Spotify.ApiClientBehaviour.spotify_error()
   @impl true
   def get_track(track_id) do
     case exchange_client_credentials_for_token() do
@@ -59,25 +58,81 @@ defmodule Radio.Spotify.ApiClient do
   end
 
   @doc """
+  Get current user.
+  """
+  @spec get_my_user(Radio.Spotify.TokenInfo.t()) ::
+          Radio.Spotify.ApiClientBehaviour.spotify_error() | {:ok, Radio.Spotify.User.t()}
+  @impl true
+  def get_my_user(%Radio.Spotify.TokenInfo{} = token_info) do
+    headers = [TokenInfo.authorization_header(token_info) | [json_content(), accept_json()]]
+
+    case "/v1/me" |> do_api_get(headers) do
+      {:ok, %{"id" => id, "display_name" => display_name}} ->
+        {:ok, %User{id: id, display_name: display_name}}
+
+      {:ok, _body} ->
+        spotify_error(nil, "unable to get user profile")
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
   Starts playback for the list of `uris` on the device specified with `device_id`.
   """
   @spec start_playback(Radio.Spotify.TokenInfo.t(), String.t(), [String.t()]) ::
-          :ok | {:error, %{message: any, status: nil | integer}}
+          Radio.Spotify.ApiClientBehaviour.spotify_response()
   @impl true
   def start_playback(%TokenInfo{} = token_info, device_id, uris) do
     headers = [TokenInfo.authorization_header(token_info) | [json_content(), accept_json()]]
 
     encoded_body = %{uris: uris} |> Poison.encode!()
 
-    resp = "/v1/me/player/play?device_id=#{device_id}" |> do_api_put(encoded_body, headers)
+    "/v1/me/player/play?device_id=#{device_id}" |> do_api_put(encoded_body, headers)
+  end
 
-    case resp do
-      {:ok, _} ->
-        :ok
+  @doc """
+  Refreshes a user's access token.
+  """
+  @spec refresh_token(Radio.Spotify.TokenInfo.t()) ::
+          {:ok, Radio.Spotify.TokenInfo.t()} | Radio.Spotify.ApiClientBehaviour.spotify_error()
+  @impl true
+  def refresh_token(%TokenInfo{} = token_info) do
+    headers = [basic_auth() | [accept_json(), form_content()]]
 
-      {:error, reason} ->
-        {:error, reason}
-    end
+    encoded_body =
+      %{
+        grant_type: "refresh_token",
+        refresh_token: token_info.refresh_token
+      }
+      |> URI.encode_query()
+
+    @token_url
+    |> do_post(encoded_body, headers)
+    |> ensure_token("unable to refresh tokens")
+  end
+
+  @doc """
+  Gets an access token for an auth code.
+  """
+  @spec refresh_token(String.t()) ::
+          {:ok, Radio.Spotify.TokenInfo.t()} | Radio.Spotify.ApiClientBehaviour.spotify_error()
+  @impl true
+  def exchange_auth_code_for_token(code) do
+    encoded_body =
+      %{
+        code: code,
+        grant_type: "authorization_code",
+        redirect_uri: redirect_uri()
+      }
+      |> URI.encode_query()
+
+    headers = [basic_auth() | [accept_json(), form_content()]]
+
+    @token_url
+    |> do_post(encoded_body, headers)
+    |> ensure_token("unable to exchange auth code for token")
   end
 
   defp exchange_client_credentials_for_token do
@@ -153,5 +208,30 @@ defmodule Radio.Spotify.ApiClient do
       |> to_string
 
     {:Authorization, "Basic #{token}"}
+  end
+
+  defp ensure_token(resp, error_msg) do
+    case resp do
+      {:ok,
+       %{
+         "access_token" => access_token,
+         "refresh_token" => refresh_token,
+         "token_type" => token_type,
+         "expires_in" => expires_in
+       }} ->
+        {:ok,
+         %TokenInfo{
+           access_token: access_token,
+           refresh_token: refresh_token,
+           token_type: token_type,
+           expires_in: expires_in
+         }}
+
+      {:ok, _body} ->
+        spotify_error(nil, error_msg)
+
+      error ->
+        error
+    end
   end
 end

@@ -24,7 +24,7 @@ defmodule Radio.TrackQueue do
   @doc """
   Returns the current queue
   """
-  @spec current_queue(GenServer.server()) :: [Radio.Spotify.TrackInfo]
+  @spec current_queue(GenServer.server()) :: [Radio.Spotify.TrackInfo.t()]
   def current_queue(server) do
     GenServer.call(server, :current_queue)
   end
@@ -32,9 +32,10 @@ defmodule Radio.TrackQueue do
   @doc """
   Starts playback of the current queue on the device represented by `device_id`.
   """
-  @spec play_on(GenServer.server(), String.t(), Radio.Spotify.TokenInfo.t()) :: :ok
+  @spec play_on(GenServer.server(), String.t(), Radio.Spotify.TokenInfo.t()) ::
+          Radio.Spotify.ApiClientBehaviour.spotify_response()
   def play_on(server, device_id, token_info) do
-    GenServer.cast(server, {:play_on, device_id, token_info})
+    GenServer.call(server, {:play_on, device_id, token_info})
   end
 
   @impl true
@@ -45,6 +46,16 @@ defmodule Radio.TrackQueue do
   @impl true
   def handle_call(:current_queue, _from, {_name, track_queue} = state) do
     {:reply, :queue.to_list(track_queue), state}
+  end
+
+  @impl true
+  def handle_call({:play_on, device_id, token_info}, _from, {_name, track_queue} = state) do
+    uris =
+      track_queue
+      |> :queue.to_list()
+      |> Enum.map(fn %{uri: uri} -> uri end)
+
+    {:reply, api_client().start_playback(token_info, device_id, uris), state}
   end
 
   @impl true
@@ -62,18 +73,6 @@ defmodule Radio.TrackQueue do
       {:error, _reason} ->
         {:noreply, {name, track_queue}}
     end
-  end
-
-  @impl true
-  def handle_cast({:play_on, device_id, token_info}, {_name, track_queue} = state) do
-    uris =
-      track_queue
-      |> :queue.to_list()
-      |> Enum.map(fn %{uri: uri} -> uri end)
-
-    api_client().start_playback(token_info, device_id, uris)
-
-    {:noreply, state}
   end
 
   @impl true
