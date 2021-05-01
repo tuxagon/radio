@@ -3,6 +3,7 @@ defmodule RadioWeb.UserSocket do
 
   ## Channels
   # channel "room:*", RadioWeb.RoomChannel
+  channel "token:*", RadioWeb.TokenChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
@@ -16,8 +17,18 @@ defmodule RadioWeb.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   @impl true
-  def connect(_params, socket, _connect_info) do
-    {:ok, socket}
+  def connect(%{"token" => token}, socket, _connect_info) do
+    case Phoenix.Token.verify(socket, "user", token, max_age: 1_209_600) do
+      {:ok, user_id} ->
+        {:ok, socket |> assign(:user_id, user_id)}
+
+      {:error, _} ->
+        :error
+    end
+  end
+
+  def connect(_params, _socket, _connect_info) do
+    :error
   end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:

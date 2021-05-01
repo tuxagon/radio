@@ -4,6 +4,9 @@
   <p>
   https://open.spotify.com/track/4EWCNWgDS8707fNSZ1oaA5?si=c18a5e087dd8478d
   </p>
+  <p>
+  https://open.spotify.com/track/5jQYkYhoOlBW4vJ2l4TCxl?si=263c5338e4e643ad
+  </p>
 
   <p>
   <%= @selected_device %>
@@ -14,7 +17,9 @@
     <button type="submit" phx-disable-with="Queuing...">Add to Station Queue</button>
   </form>
 
-  <%= Enum.map(@devices, fn %{"name" => name, "id" => id} -> %>
+  <button phx-click="refresh">refresh</button>
+
+  <%= Enum.map(@devices, fn %{id: id, name: name, type: _type} -> %>
     <button id="play-on-<%= id %>"
             phx-hook="PlayOn"
             data-device-id="<%= id %>"

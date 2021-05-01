@@ -7,8 +7,9 @@ defmodule Radio.Spotify.ApiClientBehaviour do
   @callback get_track(String.t()) :: spotify_response()
 
   @callback exchange_auth_code_for_token(String.t()) :: spotify_response()
-  @callback get_my_user(Radio.Spotify.TokenInfo.t()) :: spotify_response()
-  @callback refresh_token(Radio.Spotify.TokenInfo.t()) :: spotify_response()
-  @callback start_playback(Radio.Spotify.TokenInfo.t(), String.t(), [String.t()]) ::
+  @callback get_my_devices(String.t()) :: spotify_response()
+  @callback get_my_user(String.t()) :: spotify_response()
+  @callback refresh_token(String.t()) :: spotify_response()
+  @callback start_playback(String.t(), String.t(), [String.t()]) ::
               spotify_response()
 end

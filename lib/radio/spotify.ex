@@ -29,6 +29,21 @@ defmodule Radio.Spotify do
     %{url: "https://accounts.spotify.com/authorize?#{params}", state: auth_state}
   end
 
+  def track_id_from_song_link(song_link) do
+    %URI{path: path} = URI.parse(song_link)
+    String.replace_prefix(path, "/track/", "")
+  end
+
+  def valid_song_link?(song_link) do
+    case URI.parse(song_link) do
+      %URI{host: "open.spotify.com"} ->
+        true
+
+      _ ->
+        false
+    end
+  end
+
   defp gen_auth_state_token do
     :crypto.strong_rand_bytes(24) |> :base64.encode()
   end

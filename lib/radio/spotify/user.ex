@@ -3,10 +3,10 @@ defmodule Radio.Spotify.User do
   Information related to a specific Spotify user
   """
 
-  defstruct [:id, :display_name]
+  defstruct [:id, :name]
 
   @type t :: %__MODULE__{
           id: String.t(),
-          display_name: String.t()
+          name: String.t()
         }
 end

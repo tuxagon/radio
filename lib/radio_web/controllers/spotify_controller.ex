@@ -3,6 +3,8 @@ defmodule RadioWeb.SpotifyController do
 
   alias Radio.Spotify
   alias Radio.Spotify.TokenInfo
+  alias Radio.Spotify.User
+  alias Radio.UserContext
 
   @spec api_client() :: module()
   def api_client, do: Application.get_env(:radio, :spotify_api)
@@ -23,15 +25,20 @@ defmodule RadioWeb.SpotifyController do
     else
       conn = clear_session(conn)
 
-      with {:ok, token_info} <- api_client().exchange_auth_code_for_token(code),
-           {:ok, user} <- api_client().get_my_user(token_info) do
-        IO.puts(token_info.access_token)
+      with {:ok, %{"access_token" => access_token}} <-
+             api_client().exchange_auth_code_for_token(code),
+           {:ok, %User{} = user} <- api_client().get_my_user(access_token),
+           context <- UserContext.get(Radio.UserContext, user.id) do
+        UserContext.insert(Radio.UserContext, %Radio.Context{
+          user: user,
+          access_token: access_token,
+          selected_device: if(is_nil(context), do: nil, else: context.selected_device)
+        })
 
         conn
-        |> assign(:user, user)
-        |> put_session(:token_info, token_info)
+        |> put_session(:current_user_id, user.id)
         # TODO replace with something dynamic
-        |> redirect(to: "radio/test")
+        |> redirect(to: "/radio/test")
       else
         _ ->
           redirect(conn, to: "/?error=invalid_token")
@@ -54,13 +61,15 @@ defmodule RadioWeb.SpotifyController do
   end
 
   def play(conn, %{"device_id" => device_id, "station_name" => station_name} = _params) do
-    token_info = get_session(conn, :token_info)
+    user_id = get_session(conn, :current_user_id)
+
+    context = UserContext.get(Radio.UserContext, user_id)
 
     {:ok, station} = Radio.StationRegistry.lookup(station_name)
 
     conn
     |> json(%{device_id: device_id})
-    |> handle_result(Radio.TrackQueue.play_on(station, device_id, token_info))
+    |> handle_result(Radio.TrackQueue.play_on(station, device_id, context.access_token))
   end
 
   defp handle_result(conn, result) do
@@ -69,7 +78,7 @@ defmodule RadioWeb.SpotifyController do
         conn
 
       {:error, %{status: 401}} ->
-        conn |> put_status(:unauthorized)
+        conn |> redirect(to: "/login") |> put_status(:unauthorized)
 
       {:error, _reason} ->
         conn |> put_status(:failed_dependency)
