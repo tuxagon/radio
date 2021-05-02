@@ -28,7 +28,7 @@ defmodule RadioWeb.StationLive do
         track_list = Radio.StationRegistry.upcoming(station_name)
 
         if is_nil(context) do
-          {:ok, socket |> redirect(to: "/login?back=#{station_name}")}
+          {:ok, socket |> redirect(to: "/login?return_station=#{station_name}")}
         else
           {:ok,
            socket
@@ -43,7 +43,7 @@ defmodule RadioWeb.StationLive do
         end
 
       _ ->
-        {:ok, socket |> redirect(to: "/login?back=#{station_name}")}
+        {:ok, socket |> redirect(to: "/login?return_station=#{station_name}")}
     end
   end
 
@@ -97,10 +97,10 @@ defmodule RadioWeb.StationLive do
 
     with {:ok, _body} <- Radio.TrackQueue.play_on(station, id, context.access_token),
          :ok <- UserContext.update(Radio.UserContext, updated_context) do
-      {:noreply, socket |> assign(selected_device: device)}
+      {:noreply, socket |> assign(context: updated_context)}
     else
       {:error, %{status: 401}} ->
-        {:noreply, socket |> redirect(to: "/login?back=#{station_name}")}
+        {:noreply, socket |> redirect(to: "/login?return_station=#{station_name}")}
 
       _ ->
         {:noreply, socket}
@@ -133,7 +133,7 @@ defmodule RadioWeb.StationLive do
               socket |> put_flash(:success, "Queuing #{track_info.name} on #{device.name}")
 
             {:error, %{status: 401}} ->
-              socket |> redirect(to: "/login?back=#{station_name}")
+              socket |> redirect(to: "/login?return_station=#{station_name}")
 
             {:error, _reason} ->
               socket
@@ -191,7 +191,7 @@ defmodule RadioWeb.StationLive do
         {:noreply, socket |> assign(devices: devices)}
 
       {:error, %{status: 401}} ->
-        {:noreply, socket |> redirect(to: "/login?back=#{station_name}")}
+        {:noreply, socket |> redirect(to: "/login?return_station=#{station_name}")}
 
       {:error, _reason} ->
         {:noreply, socket |> assign(devices: [])}
@@ -202,6 +202,6 @@ defmodule RadioWeb.StationLive do
   def handle_info(:refresh_page, socket) do
     %{station_name: station_name} = socket.assigns
 
-    {:noreply, redirect(socket, to: "/login?back=#{station_name}")}
+    {:noreply, redirect(socket, to: "/login?return_station=#{station_name}")}
   end
 end
