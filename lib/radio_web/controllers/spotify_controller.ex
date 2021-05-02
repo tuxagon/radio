@@ -2,7 +2,6 @@ defmodule RadioWeb.SpotifyController do
   use RadioWeb, :controller
 
   alias Radio.Spotify
-  alias Radio.Spotify.TokenInfo
   alias Radio.Spotify.User
   alias Radio.UserContext
 
@@ -13,16 +12,20 @@ defmodule RadioWeb.SpotifyController do
     conn |> render("index.html")
   end
 
-  def login(conn, _params) do
+  def login(conn, params) do
     %{url: authorize_url, state: auth_state} = Spotify.authorize_url()
+
+    station = params["return_station"] || ""
 
     conn
     |> put_session(:spotify_auth_state, auth_state)
+    |> put_session(:station, station)
     |> redirect(external: authorize_url)
   end
 
   def callback(conn, %{"state" => state, "code" => code}) do
     stored_state = get_session(conn, :spotify_auth_state)
+    station = get_session(conn, :station)
 
     if state != stored_state do
       redirect(conn, to: "/?error=state_mismatch")
@@ -41,12 +44,21 @@ defmodule RadioWeb.SpotifyController do
 
         conn
         |> put_session(:current_user_id, user.id)
-        # TODO replace with something dynamic
-        |> redirect(to: "/radio/test")
+        |> redirect(to: if(station == "", do: "/radio", else: "/radio/#{station}"))
       else
         _ ->
           redirect(conn, to: "/?error=invalid_token")
       end
+    end
+  end
+
+  def choose(conn, params) do
+    case params do
+      %{"return_station" => station_name} ->
+        conn |> redirect(to: "/radio/#{station_name}")
+
+      _params ->
+        conn |> render("choose.html")
     end
   end
 

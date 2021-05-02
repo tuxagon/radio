@@ -26,12 +26,12 @@ defmodule RadioWeb.StationLive do
     track_list = Radio.StationRegistry.upcoming(station_name)
 
     if is_nil(context) do
-      {:ok, socket |> redirect(to: "/login")}
+      {:ok, socket |> redirect(to: "/login?back=#{station_name}")}
     else
       {:ok,
        socket
        |> assign(
-         station_name: name,
+         station_name: station_name,
          devices: [],
          current_user_id: user_id,
          context: context,
@@ -94,7 +94,7 @@ defmodule RadioWeb.StationLive do
       {:noreply, socket |> assign(selected_device: device)}
     else
       {:error, %{status: 401}} ->
-        {:noreply, socket |> redirect(to: "/login")}
+        {:noreply, socket |> redirect(to: "/login?back=#{station_name}")}
 
       _ ->
         {:noreply, socket}
@@ -127,7 +127,7 @@ defmodule RadioWeb.StationLive do
               socket |> put_flash(:success, "Queuing #{track_info.name} on #{device.name}")
 
             {:error, %{status: 401}} ->
-              socket |> redirect(to: "/login")
+              socket |> redirect(to: "/login?back=#{station_name}")
 
             {:error, _reason} ->
               socket
@@ -176,7 +176,9 @@ defmodule RadioWeb.StationLive do
 
   @impl true
   def handle_info(:fetch_devices, socket) do
-    context = UserContext.get(Radio.UserContext, socket.assigns[:current_user_id])
+    %{station_name: station_name, current_user_id: user_id} = socket.assigns
+
+    context = UserContext.get(Radio.UserContext, user_id)
 
     devices =
       case api_client().get_my_devices(context.access_token) do
@@ -184,7 +186,7 @@ defmodule RadioWeb.StationLive do
           devices
 
         {:error, %{status: 401}} ->
-          socket |> redirect(to: "/login")
+          socket |> redirect(to: "/login?back=#{station_name}")
 
         {:error, _reason} ->
           []
@@ -195,6 +197,8 @@ defmodule RadioWeb.StationLive do
 
   @impl true
   def handle_info(:refresh_page, socket) do
-    {:noreply, redirect(socket, to: "/login")}
+    %{station_name: station_name} = socket.assigns
+
+    {:noreply, redirect(socket, to: "/login?back=#{station_name}")}
   end
 end

@@ -1,0 +1,6 @@
+<div class="flex items-center justify-center h-screen w-screen bg-gray-300">
+  <form action="/radio" method="GET">
+    <input type="text" name="return_station" placeholder="Station name" autocomplete="off" class="rounded-full px-5 py-3 text-lg w-full outline-none border border-black focus:border-spotify-green" />
+    <button type="submit" class="float-right rounded-full mt-4 py-3 px-6 bg-spotify-green text-white">Go</button>
+  </form>
+</div>

@@ -25,7 +25,7 @@ defmodule RadioWeb.Router do
   scope "/", RadioWeb do
     pipe_through :browser
 
-    # live "/page", PageLive, :index
+    get "/radio", SpotifyController, :choose
     live "/radio/:station", StationLive, :index
 
     get "/", SpotifyController, :index
