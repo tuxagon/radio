@@ -24,3 +24,9 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 If you haven't, Install Gigalixir CLI
 
 https://gigalixir.readthedocs.io/en/latest/getting-started-guide.html#install-the-command-line-interface
+
+To deploy, run
+
+```bash
+$ git push gigalixir main
+```
