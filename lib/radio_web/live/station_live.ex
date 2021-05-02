@@ -25,18 +25,20 @@ defmodule RadioWeb.StationLive do
     context = UserContext.get(Radio.UserContext, user_id)
     track_list = Radio.StationRegistry.upcoming(station_name)
 
-    {:ok,
-     socket
-     |> assign(
-       station_name: name,
-       devices: [],
-       current_user_id: user_id,
-       context: context,
-       current_queue: track_list,
-       current_track: List.first(track_list),
-       upcoming_tracks: Enum.drop(track_list, 1),
-       selected_device: context.selected_device
-     )}
+    if is_nil(context) do
+      {:ok, socket |> redirect(to: "/login")}
+    else
+      {:ok,
+       socket
+       |> assign(
+         station_name: name,
+         devices: [],
+         current_user_id: user_id,
+         context: context,
+         current_queue: track_list,
+         upcoming_tracks: Enum.drop(track_list, 1)
+       )}
+    end
   end
 
   @impl true
