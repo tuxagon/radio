@@ -10,34 +10,40 @@ defmodule RadioWeb.StationLive do
   def api_client, do: Application.get_env(:radio, :spotify_api)
 
   @impl true
-  def mount(%{"station" => name} = _params, %{"current_user_id" => user_id} = _session, socket) do
+  def mount(%{"station" => name} = _params, session, socket) do
     # ensure the radio station exists when someone visits the URL
     station_name = String.trim(name)
     {:ok, _station} = Radio.StationRegistry.lookup(station_name)
 
-    if connected?(socket) do
-      PubSub.subscribe(Radio.PubSub, "station:#{station_name}")
-      PubSub.subscribe(Radio.PubSub, "user:#{user_id}")
+    case session do
+      %{"current_user_id" => user_id} ->
+        if connected?(socket) do
+          PubSub.subscribe(Radio.PubSub, "station:#{station_name}")
+          PubSub.subscribe(Radio.PubSub, "user:#{user_id}")
 
-      Process.send(self(), :fetch_devices, [])
-    end
+          Process.send(self(), :fetch_devices, [])
+        end
 
-    context = UserContext.get(Radio.UserContext, user_id)
-    track_list = Radio.StationRegistry.upcoming(station_name)
+        context = UserContext.get(Radio.UserContext, user_id)
+        track_list = Radio.StationRegistry.upcoming(station_name)
 
-    if is_nil(context) do
-      {:ok, socket |> redirect(to: "/login?back=#{station_name}")}
-    else
-      {:ok,
-       socket
-       |> assign(
-         station_name: station_name,
-         devices: [],
-         current_user_id: user_id,
-         context: context,
-         current_queue: track_list,
-         upcoming_tracks: Enum.drop(track_list, 1)
-       )}
+        if is_nil(context) do
+          {:ok, socket |> redirect(to: "/login?back=#{station_name}")}
+        else
+          {:ok,
+           socket
+           |> assign(
+             station_name: station_name,
+             devices: [],
+             current_user_id: user_id,
+             context: context,
+             current_queue: track_list,
+             upcoming_tracks: Enum.drop(track_list, 1)
+           )}
+        end
+
+      _ ->
+        {:ok, socket |> redirect(to: "/login?back=#{station_name}")}
     end
   end
 
