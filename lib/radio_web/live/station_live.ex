@@ -3,6 +3,7 @@ defmodule RadioWeb.StationLive do
 
   alias Phoenix.PubSub
   alias Radio.Spotify
+  alias Radio.Context
   alias Radio.UserContext
 
   @spec api_client() :: module()
@@ -17,33 +18,23 @@ defmodule RadioWeb.StationLive do
     if connected?(socket) do
       PubSub.subscribe(Radio.PubSub, "station:#{station_name}")
       PubSub.subscribe(Radio.PubSub, "user:#{user_id}")
+
+      Process.send(self(), :fetch_devices, [])
     end
 
     context = UserContext.get(Radio.UserContext, user_id)
     track_list = Radio.StationRegistry.upcoming(station_name)
 
-    devices =
-      case api_client().get_my_devices(context.access_token) do
-        {:ok, devices} ->
-          devices
-
-        {:error, %{status: 401}} ->
-          socket |> redirect(to: "/login")
-
-        {:error, _reason} ->
-          []
-      end
-
     {:ok,
      socket
      |> assign(
        station_name: name,
-       devices: devices,
+       devices: [],
        current_user_id: user_id,
        current_queue: track_list,
        current_track: List.first(track_list),
        upcoming_tracks: Enum.drop(track_list, 1),
-       selected_device: socket.assigns[:device_id]
+       selected_device: context.selected_device
      )}
   end
 
@@ -85,6 +76,29 @@ defmodule RadioWeb.StationLive do
   end
 
   @impl true
+  def handle_event("play-on", %{"device-id" => id, "device-name" => name}, socket) do
+    %{station_name: station_name, current_user_id: user_id} = socket.assigns
+
+    {:ok, station} = Radio.StationRegistry.lookup(station_name)
+
+    device = %Spotify.Device{id: id, name: name}
+
+    context = UserContext.get(Radio.UserContext, user_id)
+    updated_context = Map.put(context, :selected_device, device)
+
+    with {:ok, _body} <- Radio.TrackQueue.play_on(station, id, context.access_token),
+         :ok <- UserContext.update(Radio.UserContext, updated_context) do
+      {:noreply, socket |> assign(selected_device: device)}
+    else
+      {:error, %{status: 401}} ->
+        {:noreply, socket |> redirect(to: "/login")}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
   def handle_event("set-device", params, socket) do
     case params do
       %{"device_id" => device_id, "device_name" => device_name} ->
@@ -99,8 +113,26 @@ defmodule RadioWeb.StationLive do
   end
 
   @impl true
-  def handle_info({:new_track, _track_info}, socket) do
-    %{station_name: station_name} = socket.assigns
+  def handle_info({:new_track, track_info}, socket) do
+    %{station_name: station_name, current_user_id: user_id} = socket.assigns
+
+    socket =
+      case UserContext.get(Radio.UserContext, user_id) do
+        %Context{selected_device: %Spotify.Device{} = device} = context ->
+          case api_client().queue_track(context.access_token, track_info.uri) do
+            {:ok, _body} ->
+              socket |> put_flash(:success, "Queuing #{track_info.name} on #{device.name}")
+
+            {:error, %{status: 401}} ->
+              socket |> redirect(to: "/login")
+
+            {:error, _reason} ->
+              socket
+          end
+
+        _ ->
+          socket
+      end
 
     current_queue = Radio.StationRegistry.upcoming(station_name)
 
@@ -137,6 +169,25 @@ defmodule RadioWeb.StationLive do
        current_track: nil,
        upcoming_tracks: []
      )}
+  end
+
+  @impl true
+  def handle_info(:fetch_devices, socket) do
+    context = UserContext.get(Radio.UserContext, socket.assigns[:current_user_id])
+
+    devices =
+      case api_client().get_my_devices(context.access_token) do
+        {:ok, devices} ->
+          devices
+
+        {:error, %{status: 401}} ->
+          socket |> redirect(to: "/login")
+
+        {:error, _reason} ->
+          []
+      end
+
+    {:noreply, socket |> assign(devices: devices)}
   end
 
   @impl true

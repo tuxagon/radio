@@ -10,6 +10,7 @@ defmodule Radio.Spotify.ApiClientBehaviour do
   @callback get_my_devices(String.t()) :: spotify_response()
   @callback get_my_user(String.t()) :: spotify_response()
   @callback refresh_token(String.t()) :: spotify_response()
+  @callback queue_track(String.t(), String.t()) :: spotify_response()
   @callback start_playback(String.t(), String.t(), [String.t()]) ::
               spotify_response()
 end

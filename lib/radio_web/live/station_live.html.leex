@@ -8,9 +8,11 @@
   https://open.spotify.com/track/5jQYkYhoOlBW4vJ2l4TCxl?si=263c5338e4e643ad
   </p>
 
-  <p>
-  <%= @selected_device %>
-  </p>
+  <%= if assigns[:selected_device] do %>
+    <p>
+    Playing on <%= @selected_device.name %>
+    </p>
+  <% end %>
 
   <form phx-submit="queue">
     <input type="text" name="song_link" value="" placeholder="Spotify Song Link" autocomplete="off"/>
@@ -20,11 +22,7 @@
   <button phx-click="refresh">refresh</button>
 
   <%= Enum.map(@devices, fn %{id: id, name: name, type: _type} -> %>
-    <button id="play-on-<%= id %>"
-            phx-hook="PlayOn"
-            data-device-id="<%= id %>"
-            data-device-name="<%= name %>"
-            data-station-name="<%= @station_name %>">
+    <button phx-click="play-on" phx-value-device-id="<%= id %>" phx-value-device-name="<%= name %>">
       Play On <%= name %>
     </button>
   <% end) %>

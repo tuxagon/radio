@@ -104,6 +104,19 @@ defmodule Radio.Spotify.ApiClient do
   end
 
   @doc """
+  Add track to current queue on a user's active device.
+  """
+  @spec queue_track(String.t(), String.t()) :: Radio.Spotify.ApiClientBehaviour.spotify_response()
+  @impl true
+  def queue_track(access_token, uri) do
+    headers = [token_auth(access_token) | [json_content(), accept_json()]]
+
+    body = %{uri: uri} |> Poison.encode!()
+
+    "/v1/me/player/queue?uri=#{uri}" |> do_api_post(body, headers)
+  end
+
+  @doc """
   Starts playback for the list of `uris` on the device specified with `device_id`.
   """
   @spec start_playback(String.t(), String.t(), [String.t()]) ::
@@ -185,6 +198,12 @@ defmodule Radio.Spotify.ApiClient do
   defp do_api_get(url, headers) do
     (@api_url <> url)
     |> get(headers)
+    |> handle_response()
+  end
+
+  defp do_api_post(url, body, headers) do
+    (@api_url <> url)
+    |> post(body, headers)
     |> handle_response()
   end
 

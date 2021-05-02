@@ -8,7 +8,11 @@ defmodule Radio.UserContext do
   end
 
   def insert(server, %Context{} = context) do
-    GenServer.cast(server, {:insert, context})
+    GenServer.cast(server, {:put, context})
+  end
+
+  def update(server, %Context{} = context) do
+    GenServer.cast(server, {:put, context})
   end
 
   def get(server, user_id) do
@@ -21,7 +25,7 @@ defmodule Radio.UserContext do
   end
 
   @impl true
-  def handle_cast({:insert, context}, user_contexts) do
+  def handle_cast({:put, context}, user_contexts) do
     {:noreply, Map.put(user_contexts, context.user.id, context)}
   end
 
