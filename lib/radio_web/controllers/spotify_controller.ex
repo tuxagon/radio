@@ -50,20 +50,6 @@ defmodule RadioWeb.SpotifyController do
     end
   end
 
-  def token(conn, _params) do
-    case get_session(conn, :token_info) do
-      %TokenInfo{access_token: access_token} ->
-        json(conn, access_token)
-
-      _ ->
-        conn |> put_status(:not_found)
-    end
-  end
-
-  def refresh(conn, _params) do
-    text(conn, "todo")
-  end
-
   def play(conn, %{"device_id" => device_id, "station_name" => station_name} = _params) do
     user_id = get_session(conn, :current_user_id)
 

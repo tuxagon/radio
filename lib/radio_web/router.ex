@@ -31,8 +31,6 @@ defmodule RadioWeb.Router do
     get "/", SpotifyController, :index
     get "/login", SpotifyController, :login
     get "/callback", SpotifyController, :callback
-    get "/token", SpotifyController, :token
-    post "/refresh", SpotifyController, :refresh
   end
 
   scope "/api", RadioWeb do
