@@ -4,9 +4,13 @@
 # remember to add this file to your .gitignore.
 import Config
 
+database_url =
+  System.get_env("DATABASE_URL") ||
+    raise("expected the DATABASE_URL environment variable to be set")
+
 config :radio, Radio.Repo,
   # ssl: true,
-  # url: database_url,
+  url: database_url,
   load_from_system_env: true,
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 
