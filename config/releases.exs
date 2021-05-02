@@ -7,9 +7,11 @@ import Config
 config :radio, Radio.Repo,
   # ssl: true,
   # url: database_url,
+  load_from_system_env: true,
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 
 config :radio, RadioWeb.Endpoint,
+  load_from_system_env: true,
   http: [
     port: String.to_integer(System.get_env("PORT") || "4000"),
     transport_options: [socket_opts: [:inet6]]
