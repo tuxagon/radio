@@ -21,7 +21,10 @@
     <% end %>
       <div class="text-left">
         <%= case assigns[:devices] do %>
-          <%= [] -> %>
+          <%= nil -> %>
+            <p>No devices found</p>
+
+          <% [] -> %>
             <p>No devices found</p>
 
           <% devices -> %>

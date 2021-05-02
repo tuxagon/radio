@@ -180,19 +180,16 @@ defmodule RadioWeb.StationLive do
 
     context = UserContext.get(Radio.UserContext, user_id)
 
-    devices =
-      case api_client().get_my_devices(context.access_token) do
-        {:ok, devices} ->
-          devices
+    case api_client().get_my_devices(context.access_token) do
+      {:ok, devices} ->
+        {:noreply, socket |> assign(devices: devices)}
 
-        {:error, %{status: 401}} ->
-          socket |> redirect(to: "/login?back=#{station_name}")
+      {:error, %{status: 401}} ->
+        {:noreply, socket |> redirect(to: "/login?back=#{station_name}")}
 
-        {:error, _reason} ->
-          []
-      end
-
-    {:noreply, socket |> assign(devices: devices)}
+      {:error, _reason} ->
+        {:noreply, socket |> assign(devices: [])}
+    end
   end
 
   @impl true
