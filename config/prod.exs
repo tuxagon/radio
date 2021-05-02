@@ -12,10 +12,19 @@ use Mix.Config
 config :radio, RadioWeb.Endpoint,
   url: [host: "example.com", port: 443],
   cache_static_manifest: "priv/static/cache_manifest.json",
-  force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil]
+  force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil],
+  secret_key_base: "${SECRET_KEY_BASE}",
+  live_view: [signing_salt: "${LIVE_VIEW_SIGNING_SALT}"]
 
 # Do not print debug messages in production
 config :logger, level: :info
+
+config :radio, :spotify,
+  redirect_uri: "${SPOTIFY_REDIRECT_URI}",
+  client_id: "${SPOTIFY_CLIENT_ID}",
+  client_secret: "${SPOTIFY_CLIENT_SECRET}"
+
+config :radio, :spotify_api, Radio.Spotify.ApiClient
 
 # ## SSL Support
 #
