@@ -1,0 +1,3 @@
+<div class="flex items-center justify-center h-screen w-screen bg-gray-300">
+  <%= button("Login with Spotify", to: "/login", method: :get, class: "rounded-full py-3 px-6 bg-spotify-green text-white") %>
+</div>

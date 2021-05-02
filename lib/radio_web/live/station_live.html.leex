@@ -1,43 +1,66 @@
-<section class="phx-hero">
-  <h1><%= gettext "%{name} radio", name: @station_name %></h1>
+<section class="flex w-screen p-16 justify-between">
+  <h1 class="text-4xl"><%= gettext "%{name} radio", name: @station_name %></h1>
+  <p class="text-lg"><%= @context.user.name %></p>
+</section>
 
-  <p>
-  https://open.spotify.com/track/4EWCNWgDS8707fNSZ1oaA5?si=c18a5e087dd8478d
-  </p>
-  <p>
-  https://open.spotify.com/track/5jQYkYhoOlBW4vJ2l4TCxl?si=263c5338e4e643ad
-  </p>
+<section class="flex justify-center w-screen">
+  <div class="container p-10">
+    <form phx-submit="queue">
+      <input type="text" name="song_link" placeholder="Spotify Song Link" autocomplete="off" class="rounded-full px-5 py-3 text-lg w-full outline-none border border-black focus:border-spotify-green" />
+      <button type="submit" phx-disable-with="Queuing..." class="float-right rounded-full mt-4 py-3 px-6 bg-spotify-green text-white">Add to Station Queue</button>
+    </form>
+  </div>
+</section>
 
-  <%= if assigns[:selected_device] do %>
-    <p>
-    Playing on <%= @selected_device.name %>
-    </p>
-  <% end %>
+<section class="flex justify-center w-screen">
+  <div class="container mx-auto">
+    <%= if is_map(@context.selected_device) do %>
+    <div class="flex justify-around border rounded-full mt-10 pt-8 pb-8 border-spotify-green">
+    <% else %>
+    <div class="flex justify-around border rounded-full border-black mt-10 pt-8 pb-8">
+    <% end %>
+      <div class="text-left">
+        <%= case assigns[:devices] do %>
+          <%= [] -> %>
+            <p>No devices found</p>
 
-  <form phx-submit="queue">
-    <input type="text" name="song_link" value="" placeholder="Spotify Song Link" autocomplete="off"/>
-    <button type="submit" phx-disable-with="Queuing...">Add to Station Queue</button>
-  </form>
+          <% devices -> %>
+            <p><strong>Your Devices</strong></p>
+            <ul>
+              <%= devices |> Enum.map(fn %{id: id, name: name} -> %>
+                <li class="pt-2">
+                  <button phx-click="play-on" phx-value-device-id="<%= id %>" phx-value-device-name="<%= name %>" class="rounded-full py-1 px-3 bg-spotify-green text-white">
+                    Play
+                  </button>
+                  <p class="inline">
+                    <%= if @context.selected_device && @context.selected_device.id == id do %>
+                      <strong><%= name %></strong>
+                    <% else %>
+                      <%= name %>
+                    <% end %>
+                  </p>
+                </li>
+              <% end) %>
+            </ul>
+        <% end %>
+      </div>
 
-  <button phx-click="refresh">refresh</button>
+      <div class="text-right">
+        <%= case assigns[:current_queue] do %>
+          <%= [current_track | upcoming_tracks] -> %>
+            <p class="inline">
+              <strong><%= current_track.name %></strong> <pre class="inline">[0]</pre>
+            </p>
+            <ul>
+              <%= upcoming_tracks |> Enum.with_index(1) |> Enum.map(fn {%{name: name, uri: uri}, position} -> %>
+                <li data-track-uri="<%= uri %>"><%= name %> <pre class="inline">[<%= position %>]</pre></li>
+              <% end) %>
+            </ul>
 
-  <%= Enum.map(@devices, fn %{id: id, name: name, type: _type} -> %>
-    <button phx-click="play-on" phx-value-device-id="<%= id %>" phx-value-device-name="<%= name %>">
-      Play On <%= name %>
-    </button>
-  <% end) %>
-
-  <%= case @current_track do %>
-    <%= nil -> %>
-      <p>No tracks queued</p>
-    <% %{name: name, uri: uri} -> %>
-      <p data-track-id="<%= uri %>">Current track is <strong><%= name %></strong>
-  <% end %>
-
-  <ol>
-    <%= Enum.map(@upcoming_tracks, fn %{name: name, uri: uri} -> %>
-      <li data-track-uri="<%= uri %>"><%= name %></li>
-    <% end) %>
-  </ol>
-
+        <% _queue -> %>
+          <p>No tracks queued</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
 </section>

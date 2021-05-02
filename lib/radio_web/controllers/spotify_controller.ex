@@ -9,6 +9,10 @@ defmodule RadioWeb.SpotifyController do
   @spec api_client() :: module()
   def api_client, do: Application.get_env(:radio, :spotify_api)
 
+  def index(conn, _params) do
+    conn |> render("index.html")
+  end
+
   def login(conn, _params) do
     %{url: authorize_url, state: auth_state} = Spotify.authorize_url()
 

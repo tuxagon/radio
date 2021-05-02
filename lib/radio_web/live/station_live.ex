@@ -31,6 +31,7 @@ defmodule RadioWeb.StationLive do
        station_name: name,
        devices: [],
        current_user_id: user_id,
+       context: context,
        current_queue: track_list,
        current_track: List.first(track_list),
        upcoming_tracks: Enum.drop(track_list, 1),
