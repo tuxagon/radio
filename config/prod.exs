@@ -1,4 +1,6 @@
-use Mix.Config
+import Mix.Config
+
+config :radio, RadioWeb.Repo, load_from_system_env: true
 
 # For production, don't forget to configure the url host
 # to something meaningful, Phoenix uses this information
@@ -10,21 +12,12 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 config :radio, RadioWeb.Endpoint,
-  url: [host: "example.com", port: 443],
+  load_from_system_env: true,
   cache_static_manifest: "priv/static/cache_manifest.json",
-  force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil],
-  secret_key_base: "${SECRET_KEY_BASE}",
-  live_view: [signing_salt: "${LIVE_VIEW_SIGNING_SALT}"]
+  code_reloader: false
 
 # Do not print debug messages in production
 config :logger, level: :info
-
-config :radio, :spotify,
-  redirect_uri: "${SPOTIFY_REDIRECT_URI}",
-  client_id: "${SPOTIFY_CLIENT_ID}",
-  client_secret: "${SPOTIFY_CLIENT_SECRET}"
-
-config :radio, :spotify_api, Radio.Spotify.ApiClient
 
 # ## SSL Support
 #
@@ -62,4 +55,4 @@ config :radio, :spotify_api, Radio.Spotify.ApiClient
 
 # Finally import the config/prod.secret.exs which loads secrets
 # and configuration from environment variables.
-import_config "prod.secret.exs"
+# import_config "prod.secret.exs"

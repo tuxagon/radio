@@ -51,4 +51,61 @@ defmodule RadioWeb.Endpoint do
   plug Plug.Head
   plug Plug.Session, @session_options
   plug RadioWeb.Router
+
+  def init(_key, config) do
+    if config[:load_from_system_env] do
+      port =
+        System.get_env("PORT") ||
+          raise("expected the PORT environment variable to be set")
+
+      secret_key_base =
+        System.get_env("SECRET_KEY_BASE") ||
+          raise("expected the SECRET_KEY_BASE environment variable to be set")
+
+      host =
+        System.get_env("APP_NAME") ||
+          raise("expected the APP_NAME environment variable to be set")
+
+      signing_salt =
+        System.get_env("LIVE_VIEW_SIGNING_SALT") ||
+          raise("expected the LIVE_VIEW_SIGNING_SALT environment variable to be set")
+
+      spotify_redirect_uri =
+        System.get_env("SPOTIFY_REDIRECT_URI") ||
+          raise """
+          environment variable SPOTIFY_REDIRECT_URI is missing.
+          You can set it here: https://developer.spotify.com/dashboard/applications
+          """
+
+      spotify_client_id =
+        System.get_env("SPOTIFY_CLIENT_ID") ||
+          raise """
+          environment variable SPOTIFY_CLIENT_ID is missing.
+          You can get it here: https://developer.spotify.com/dashboard/applications
+          """
+
+      spotify_client_secret =
+        System.get_env("SPOTIFY_CLIENT_SECRET") ||
+          raise """
+          environment variable SPOTIFY_CLIENT_SECRET is missing.
+          You can get it here: https://developer.spotify.com/dashboard/applications
+          """
+
+      config =
+        config
+        |> Keyword.put(:http, [:inet6, port: port])
+        |> Keyword.put(:secret_key_base, secret_key_base)
+        |> Keyword.put(:live_view, signing_salt: signing_salt)
+        |> Keyword.put(:url, host: host <> ".gigalixirapp.com", port: port)
+        |> Keyword.put(:spotify,
+          redirect_uri: spotify_redirect_uri,
+          client_id: spotify_client_id,
+          client_secret: spotify_client_secret
+        )
+
+      {:ok, config}
+    else
+      {:ok, config}
+    end
+  end
 end
