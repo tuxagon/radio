@@ -5,20 +5,15 @@
 import Config
 
 config :radio, Radio.Repo,
-  load_from_system_env: true,
   # ssl: true,
   # url: database_url,
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 
 config :radio, RadioWeb.Endpoint,
-  load_from_system_env: true,
-  cache_static_manifest: "priv/static/cache_manifest.json",
-  code_reloader: false,
   http: [
     port: String.to_integer(System.get_env("PORT") || "4000"),
     transport_options: [socket_opts: [:inet6]]
   ],
-  force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil],
   server: true
 
 spotify_redirect_uri =

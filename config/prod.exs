@@ -13,6 +13,7 @@ config :radio, RadioWeb.Repo, load_from_system_env: true
 # before starting your production server.
 config :radio, RadioWeb.Endpoint,
   load_from_system_env: true,
+  force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil],
   cache_static_manifest: "priv/static/cache_manifest.json",
   code_reloader: false
 
