@@ -62,9 +62,9 @@ defmodule RadioWeb.Endpoint do
         System.get_env("SECRET_KEY_BASE") ||
           raise("expected the SECRET_KEY_BASE environment variable to be set")
 
-      host =
-        System.get_env("APP_NAME") ||
-          raise("expected the APP_NAME environment variable to be set")
+      # host =
+      #   System.get_env("APP_NAME") ||
+      #     raise("expected the APP_NAME environment variable to be set")
 
       signing_salt =
         System.get_env("LIVE_VIEW_SIGNING_SALT") ||
@@ -96,7 +96,8 @@ defmodule RadioWeb.Endpoint do
         |> Keyword.put(:http, [:inet6, port: port])
         |> Keyword.put(:secret_key_base, secret_key_base)
         |> Keyword.put(:live_view, signing_salt: signing_salt)
-        |> Keyword.put(:url, host: host <> ".gigalixirapp.com", port: port)
+        # |> Keyword.put(:url, host: host <> ".gigalixirapp.com", port: port)
+        |> Keyword.put(:url, host: "radio.wobblycobbler.com", port: port)
         |> Keyword.put(:spotify,
           redirect_uri: spotify_redirect_uri,
           client_id: spotify_client_id,
