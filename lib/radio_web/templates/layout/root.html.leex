@@ -15,7 +15,7 @@
   <body class="flex flex-col h-screen w-screen bg-gray-300">
     <%= @inner_content %>
 
-    <footer class="w-screen bottom-5 absolute">
+    <footer class="w-screen bottom-5 fixed">
       <div class="container mx-auto text-center">
         <p class="inline align-middle">Powered by </p>
         <img class="w-auto max-h-8 inline" src="<%= Routes.static_path(@conn, "/images/Spotify_Logo_CMYK_Green.png") %>" alt="Spotify"/>
