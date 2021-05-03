@@ -61,29 +61,4 @@ defmodule RadioWeb.SpotifyController do
         conn |> render("choose.html")
     end
   end
-
-  def play(conn, %{"device_id" => device_id, "station_name" => station_name} = _params) do
-    user_id = get_session(conn, :current_user_id)
-
-    context = UserContext.get(Radio.UserContext, user_id)
-
-    {:ok, station} = Radio.StationRegistry.lookup(station_name)
-
-    conn
-    |> json(%{device_id: device_id})
-    |> handle_result(Radio.TrackQueue.play_on(station, device_id, context.access_token))
-  end
-
-  defp handle_result(conn, result) do
-    case result do
-      {:ok, _body} ->
-        conn
-
-      {:error, %{status: 401}} ->
-        conn |> redirect(to: "/login") |> put_status(:unauthorized)
-
-      {:error, _reason} ->
-        conn |> put_status(:failed_dependency)
-    end
-  end
 end
