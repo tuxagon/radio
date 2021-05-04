@@ -1,5 +1,5 @@
 defmodule Radio.TrackQueue do
-  use GenServer
+  use GenServer, restart: :temporary
 
   alias Radio.Spotify.TrackInfo
 

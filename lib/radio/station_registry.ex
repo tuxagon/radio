@@ -21,35 +21,45 @@ defmodule Radio.StationRegistry do
 
   @impl true
   def init(:ok) do
-    {:ok, %{}}
+    {:ok, {%{}, %{}}}
   end
 
   @impl true
-  def handle_call({:lookup, name}, _from, stations) do
+  def handle_call({:lookup, name}, _from, {stations, refs}) do
     if Map.has_key?(stations, name) do
-      {:reply, Map.fetch(stations, name), stations}
+      {:reply, Map.fetch(stations, name), {stations, refs}}
     else
-      {:ok, station} = Radio.TrackQueue.start_link(name, [])
+      {pid, {stations, refs}} = register_station(name, {stations, refs})
 
-      {:reply, {:ok, station}, Map.put(stations, name, station)}
+      {:reply, {:ok, pid}, {stations, refs}}
     end
   end
 
   @impl true
-  def handle_call({:upcoming, name}, _from, stations) do
+  def handle_call({:upcoming, name}, _from, {stations, refs}) do
     {:ok, station} = Map.fetch(stations, name)
 
     track_list = Radio.TrackQueue.current_queue(station)
 
-    {:reply, track_list, stations}
+    {:reply, track_list, {stations, refs}}
   end
 
   @impl true
-  def handle_cast({:queue_track, name, track_id}, stations) do
+  def handle_cast({:queue_track, name, track_id}, {stations, refs}) do
     {:ok, station} = Map.fetch(stations, name)
 
     Radio.TrackQueue.add_track(station, track_id)
 
-    {:noreply, stations}
+    {:noreply, {stations, refs}}
+  end
+
+  defp register_station(name, {stations, refs}) do
+    {:ok, pid} =
+      DynamicSupervisor.start_child(Radio.StationSupervisor, {Radio.TrackQueue, [name, [], []]})
+
+    ref = Process.monitor(pid)
+    refs = Map.put(refs, ref, name)
+    stations = Map.put(stations, name, pid)
+    {pid, {stations, refs}}
   end
 end
