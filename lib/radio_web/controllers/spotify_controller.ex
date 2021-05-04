@@ -61,4 +61,12 @@ defmodule RadioWeb.SpotifyController do
         conn |> render("choose.html")
     end
   end
+
+  def logout(conn, _params) do
+    user_id = get_session(conn, :current_user_id)
+
+    UserContext.remove(Radio.UserContext, user_id)
+
+    conn |> redirect(to: "/")
+  end
 end

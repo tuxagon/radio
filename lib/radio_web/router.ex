@@ -30,6 +30,7 @@ defmodule RadioWeb.Router do
 
     get "/", SpotifyController, :index
     get "/login", SpotifyController, :login
+    get "/logout", SpotifyController, :logout
     get "/callback", SpotifyController, :callback
   end
 

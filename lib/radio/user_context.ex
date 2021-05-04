@@ -11,6 +11,10 @@ defmodule Radio.UserContext do
     GenServer.cast(server, {:put, context})
   end
 
+  def remove(server, user_id) do
+    GenServer.cast(server, {:del, user_id})
+  end
+
   def update(server, %Context{} = context) do
     GenServer.cast(server, {:put, context})
   end
@@ -27,6 +31,11 @@ defmodule Radio.UserContext do
   @impl true
   def handle_cast({:put, context}, user_contexts) do
     {:noreply, Map.put(user_contexts, context.user.id, context)}
+  end
+
+  @impl true
+  def handle_cast({:del, user_id}, user_contexts) do
+    {:noreply, Map.delete(user_contexts, user_id)}
   end
 
   @impl true

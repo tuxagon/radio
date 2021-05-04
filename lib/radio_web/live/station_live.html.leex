@@ -1,6 +1,9 @@
 <section class="flex w-screen p-16 justify-between">
   <h1 class="text-4xl"><%= gettext "%{name} radio", name: @station_name %></h1>
-  <p class="text-lg"><%= @context.user.name %></p>
+  <div class="text-right">
+    <p class="text-lg"><%= @context.user.name %></p>
+    <%= link("Sign Out", to: "/logout", class: "text-xs text-blue-500") %>
+  </div>
 </section>
 
 <section class="flex justify-center w-screen">
