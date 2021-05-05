@@ -18,7 +18,8 @@ config :radio, RadioWeb.Endpoint,
   http: [port: 4002],
   server: false
 
-config :radio, :spotify_api, Radio.Spotify.MockApiClient
+config :radio,
+  http_client: Radio.HTTPClientMock
 
 # Print only warnings and errors during test
 config :logger, level: :warn

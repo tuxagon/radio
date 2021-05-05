@@ -3,8 +3,7 @@ defmodule Radio.TrackQueue do
 
   alias Radio.Spotify.TrackInfo
 
-  @spec api_client() :: module()
-  def api_client, do: Application.get_env(:radio, :spotify_api)
+  alias Radio.Spotify.ApiClient, as: SpotifyApi
 
   @spec start_link(String.t(), GenServer.options()) :: GenServer.on_start()
   def start_link(name, opts) do
@@ -32,8 +31,6 @@ defmodule Radio.TrackQueue do
   @doc """
   Starts playback of the current queue on the device represented by `device_id`.
   """
-  @spec play_on(GenServer.server(), String.t(), String.t()) ::
-          Radio.Spotify.ApiClientBehaviour.spotify_response()
   def play_on(server, device_id, access_token) do
     GenServer.call(server, {:play_on, device_id, access_token})
   end
@@ -55,12 +52,12 @@ defmodule Radio.TrackQueue do
       |> :queue.to_list()
       |> Enum.map(fn %{uri: uri} -> uri end)
 
-    {:reply, api_client().start_playback(access_token, device_id, uris), state}
+    {:reply, SpotifyApi.start_playback(access_token, device_id, uris), state}
   end
 
   @impl true
   def handle_cast({:add_track, track_id}, {name, track_queue}) do
-    case api_client().get_track(track_id) do
+    case SpotifyApi.get_track(track_id) do
       {:ok, %TrackInfo{duration_ms: duration_ms} = track_info} ->
         if :queue.is_empty(track_queue) do
           Process.send_after(self(), :next_track, duration_ms)

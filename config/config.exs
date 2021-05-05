@@ -8,7 +8,8 @@
 use Mix.Config
 
 config :radio,
-  ecto_repos: [Radio.Repo]
+  ecto_repos: [Radio.Repo],
+  http_client: HTTPoison
 
 # Configures the endpoint
 config :radio, RadioWeb.Endpoint,
@@ -18,9 +19,10 @@ config :radio, RadioWeb.Endpoint,
   pubsub_server: Radio.PubSub,
   live_view: [signing_salt: "NE4Oq6Bq"]
 
-config :radio, :spotify, redirect_uri: "http://localhost:4000/callback"
-
-config :radio, :spotify_api, Radio.Spotify.ApiClient
+config :radio, :spotify,
+  api_url: "https://api.spotify.com",
+  redirect_uri: "http://localhost:4000/callback",
+  token_url: "https://accounts.spotify.com/api/token"
 
 # Configures Elixir's Logger
 config :logger, :console,

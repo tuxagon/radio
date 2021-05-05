@@ -7,6 +7,7 @@ defmodule Radio.Spotify.Device do
 
   @type t :: %__MODULE__{
           id: String.t(),
-          name: String.t()
+          name: String.t(),
+          type: String.t()
         }
 end

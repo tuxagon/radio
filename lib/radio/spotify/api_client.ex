@@ -1,10 +1,5 @@
 defmodule Radio.Spotify.ApiClient do
-  use HTTPoison.Base
-
-  @behaviour Radio.Spotify.ApiClientBehaviour
-
-  @api_url "https://api.spotify.com"
-  @token_url "https://accounts.spotify.com/api/token"
+  @type error :: {:error, %{message: any, status: nil | integer}}
 
   alias Radio.Spotify.Device
   alias Radio.Spotify.TrackInfo
@@ -13,6 +8,9 @@ defmodule Radio.Spotify.ApiClient do
   defp client_id, do: Application.get_env(:radio, :spotify)[:client_id]
   defp client_secret, do: Application.get_env(:radio, :spotify)[:client_secret]
   defp redirect_uri, do: Application.get_env(:radio, :spotify)[:redirect_uri]
+  defp http_client, do: Application.get_env(:radio, :http_client)
+
+  def default_opts(), do: Application.get_env(:radio, :spotify)
 
   @doc """
   Gets track information from Spotify for a provided `track_id`.
@@ -29,15 +27,13 @@ defmodule Radio.Spotify.ApiClient do
       }}
 
   """
-  @spec get_track(String.t()) ::
-          {:ok, Radio.Spotify.TrackInfo.t()} | Radio.Spotify.ApiClientBehaviour.spotify_error()
-  @impl true
-  def get_track(track_id) do
-    case exchange_client_credentials_for_token() do
+  @spec get_track(String.t(), Keyword.t()) :: {:ok, Radio.Spotify.TrackInfo.t()} | error()
+  def get_track(track_id, opts \\ default_opts()) do
+    case exchange_client_credentials_for_token(opts) do
       {:ok, %{"access_token" => access_token}} ->
         headers = [token_auth(access_token) | [json_content(), accept_json()]]
 
-        case "/v1/tracks/#{track_id}" |> do_api_get(headers) do
+        case "/v1/tracks/#{track_id}" |> do_api_get(headers, opts) do
           {:ok, body} ->
             track_info = %TrackInfo{
               duration_ms: body["duration_ms"],
@@ -60,13 +56,11 @@ defmodule Radio.Spotify.ApiClient do
   @doc """
   Get current user's devices.
   """
-  @spec get_my_devices(String.t()) ::
-          {:ok, Radio.Spotify.Device.t()} | Radio.Spotify.ApiClientBehaviour.spotify_error()
-  @impl true
-  def get_my_devices(access_token) do
+  @spec get_my_devices(String.t(), Keyword.t()) :: {:ok, [Radio.Spotify.Device.t()]} | error()
+  def get_my_devices(access_token, opts \\ default_opts()) do
     headers = [token_auth(access_token) | [json_content(), accept_json()]]
 
-    case "/v1/me/player/devices" |> do_api_get(headers) do
+    case "/v1/me/player/devices" |> do_api_get(headers, opts) do
       {:ok, %{"devices" => devices}} ->
         {:ok,
          devices
@@ -85,13 +79,11 @@ defmodule Radio.Spotify.ApiClient do
   @doc """
   Get current user.
   """
-  @spec get_my_user(String.t()) ::
-          {:ok, Radio.Spotify.User.t()} | Radio.Spotify.ApiClientBehaviour.spotify_error()
-  @impl true
-  def get_my_user(access_token) do
+  @spec get_my_user(String.t(), Keyword.t()) :: {:ok, Radio.Spotify.User.t()} | error()
+  def get_my_user(access_token, opts \\ default_opts()) do
     headers = [token_auth(access_token) | [json_content(), accept_json()]]
 
-    case "/v1/me" |> do_api_get(headers) do
+    case "/v1/me" |> do_api_get(headers, opts) do
       {:ok, %{"id" => id, "display_name" => name}} ->
         {:ok, %User{id: id, name: name}}
 
@@ -106,36 +98,30 @@ defmodule Radio.Spotify.ApiClient do
   @doc """
   Add track to current queue on a user's active device.
   """
-  @spec queue_track(String.t(), String.t()) :: Radio.Spotify.ApiClientBehaviour.spotify_response()
-  @impl true
-  def queue_track(access_token, uri) do
+  @spec queue_track(String.t(), String.t(), Keyword.t()) :: {:ok, any} | error()
+  def queue_track(access_token, uri, opts \\ default_opts()) do
     headers = [token_auth(access_token) | [json_content(), accept_json()]]
 
-    body = %{uri: uri} |> Poison.encode!()
-
-    "/v1/me/player/queue?uri=#{uri}" |> do_api_post(body, headers)
+    "/v1/me/player/queue?uri=#{uri}" |> do_api_post(nil, headers, opts)
   end
 
   @doc """
   Starts playback for the list of `uris` on the device specified with `device_id`.
   """
-  @spec start_playback(String.t(), String.t(), [String.t()]) ::
-          Radio.Spotify.ApiClientBehaviour.spotify_response()
-  @impl true
-  def start_playback(access_token, device_id, uris) do
+  @spec start_playback(String.t(), String.t(), [String.t()], Keyword.t()) :: {:ok, any} | error()
+  def start_playback(access_token, device_id, uris, opts \\ default_opts()) do
     headers = [token_auth(access_token) | [json_content(), accept_json()]]
 
     encoded_body = %{uris: uris} |> Poison.encode!()
 
-    "/v1/me/player/play?device_id=#{device_id}" |> do_api_put(encoded_body, headers)
+    "/v1/me/player/play?device_id=#{device_id}" |> do_api_put(encoded_body, headers, opts)
   end
 
   @doc """
   Refreshes a user's access token.
   """
-  @spec refresh_token(String.t()) :: Radio.Spotify.ApiClientBehaviour.spotify_response()
-  @impl true
-  def refresh_token(refresh_token) do
+  @spec refresh_token(String.t(), Keyword.t()) :: {:ok, any} | error()
+  def refresh_token(refresh_token, opts \\ default_opts()) do
     headers = [basic_auth() | [accept_json(), form_content()]]
 
     encoded_body =
@@ -145,17 +131,15 @@ defmodule Radio.Spotify.ApiClient do
       }
       |> URI.encode_query()
 
-    @token_url
+    opts[:token_url]
     |> do_post(encoded_body, headers)
   end
 
   @doc """
   Gets an access token for an auth code.
   """
-  @spec exchange_auth_code_for_token(String.t()) ::
-          Radio.Spotify.ApiClientBehaviour.spotify_response()
-  @impl true
-  def exchange_auth_code_for_token(code) do
+  @spec exchange_auth_code_for_token(String.t(), Keyword.t()) :: {:ok, any} | error()
+  def exchange_auth_code_for_token(code, opts \\ default_opts()) do
     encoded_body =
       %{
         code: code,
@@ -166,16 +150,16 @@ defmodule Radio.Spotify.ApiClient do
 
     headers = [basic_auth() | [accept_json(), form_content()]]
 
-    @token_url
+    opts[:token_url]
     |> do_post(encoded_body, headers)
   end
 
-  defp exchange_client_credentials_for_token do
+  defp exchange_client_credentials_for_token(opts) do
     encoded_body = %{grant_type: "client_credentials"} |> URI.encode_query()
 
     headers = [basic_auth() | [accept_json(), form_content()]]
 
-    @token_url
+    opts[:token_url]
     |> do_post(encoded_body, headers)
   end
 
@@ -188,34 +172,43 @@ defmodule Radio.Spotify.ApiClient do
         {:ok, body}
 
       {:ok, %{body: body, status_code: status}} ->
-        spotify_error(status, Poison.decode!(body)["message"])
+        case Poison.decode!(body) do
+          %{"error" => %{"message" => message}} ->
+            spotify_error(status, message)
 
-      {:error, error} ->
+          %{"error_description" => message} ->
+            spotify_error(status, message)
+
+          error ->
+            spotify_error(status, error)
+        end
+
+      {:error, %HTTPoison.Error{} = error} ->
         spotify_error(error.id, error.reason)
     end
   end
 
-  defp do_api_get(url, headers) do
-    (@api_url <> url)
-    |> get(headers)
+  defp do_api_get(url, headers, opts) do
+    (opts[:api_url] <> url)
+    |> http_client().get(headers)
     |> handle_response()
   end
 
-  defp do_api_post(url, body, headers) do
-    (@api_url <> url)
-    |> post(body, headers)
+  defp do_api_post(url, body, headers, opts) do
+    (opts[:api_url] <> url)
+    |> http_client().post(body, headers)
     |> handle_response()
   end
 
-  defp do_api_put(url, body, headers) do
-    (@api_url <> url)
-    |> put(body, headers)
+  defp do_api_put(url, body, headers, opts) do
+    (opts[:api_url] <> url)
+    |> http_client().put(body, headers)
     |> handle_response()
   end
 
   defp do_post(url, body, headers) do
     url
-    |> post(body, headers)
+    |> http_client().post(body, headers)
     |> handle_response()
   end
 

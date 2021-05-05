@@ -5,8 +5,7 @@ defmodule RadioWeb.SpotifyController do
   alias Radio.Spotify.User
   alias Radio.UserContext
 
-  @spec api_client() :: module()
-  def api_client, do: Application.get_env(:radio, :spotify_api)
+  alias Radio.Spotify.ApiClient, as: SpotifyApi
 
   def index(conn, _params) do
     conn |> render("index.html")
@@ -32,10 +31,12 @@ defmodule RadioWeb.SpotifyController do
     else
       conn = clear_session(conn)
 
-      with {:ok, %{"access_token" => access_token}} <-
-             api_client().exchange_auth_code_for_token(code),
-           {:ok, %User{} = user} <- api_client().get_my_user(access_token),
+      with {:ok, %{"access_token" => access_token} = resp} <-
+             SpotifyApi.exchange_auth_code_for_token(code),
+           {:ok, %User{} = user} <- SpotifyApi.get_my_user(access_token),
            context <- UserContext.get(Radio.UserContext, user.id) do
+        IO.inspect(resp)
+
         UserContext.insert(Radio.UserContext, %Radio.Context{
           user: user,
           access_token: access_token,

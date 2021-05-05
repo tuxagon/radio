@@ -6,8 +6,7 @@ defmodule RadioWeb.StationLive do
   alias Radio.Context
   alias Radio.UserContext
 
-  @spec api_client() :: module()
-  def api_client, do: Application.get_env(:radio, :spotify_api)
+  alias Radio.Spotify.ApiClient, as: SpotifyApi
 
   @impl true
   def mount(%{"station" => name} = _params, session, socket) do
@@ -128,7 +127,7 @@ defmodule RadioWeb.StationLive do
     socket =
       case UserContext.get(Radio.UserContext, user_id) do
         %Context{selected_device: %Spotify.Device{} = device} = context ->
-          case api_client().queue_track(context.access_token, track_info.uri) do
+          case SpotifyApi.queue_track(context.access_token, track_info.uri) do
             {:ok, _body} ->
               socket |> put_flash(:success, "Queuing #{track_info.name} on #{device.name}")
 
@@ -186,7 +185,7 @@ defmodule RadioWeb.StationLive do
 
     context = UserContext.get(Radio.UserContext, user_id)
 
-    case api_client().get_my_devices(context.access_token) do
+    case SpotifyApi.get_my_devices(context.access_token) do
       {:ok, devices} ->
         {:noreply, socket |> assign(devices: devices)}
 
