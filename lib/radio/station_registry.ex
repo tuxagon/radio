@@ -54,8 +54,8 @@ defmodule Radio.StationRegistry do
   end
 
   defp register_station(name, {stations, refs}) do
-    {:ok, pid} =
-      DynamicSupervisor.start_child(Radio.StationSupervisor, {Radio.TrackQueue, [name, [], []]})
+    child_spec = %{id: Radio.TrackQueue, start: {Radio.TrackQueue, :start_link, [name, []]}}
+    {:ok, pid} = DynamicSupervisor.start_child(Radio.StationSupervisor, child_spec)
 
     ref = Process.monitor(pid)
     refs = Map.put(refs, ref, name)
