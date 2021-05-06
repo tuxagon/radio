@@ -55,6 +55,7 @@ defmodule Radio.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:httpoison, "~> 1.8"},
       {:poison, "~> 3.1"},
+      {:cachex, "~> 3.3"},
       {:mox, "~> 1.0", only: :test}
     ]
   end

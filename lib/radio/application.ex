@@ -1,4 +1,5 @@
 defmodule Radio.Application do
+  import Cachex.Spec
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
@@ -17,8 +18,8 @@ defmodule Radio.Application do
       RadioWeb.Endpoint,
       # Start a worker by calling: Radio.Worker.start_link(arg)
       # {Radio.Worker, arg}
+      {Cachex, name: :context_cache, expiration: expiration(default: :timer.hours(2))},
       {Radio.StationRegistry, name: Radio.StationRegistry},
-      {Radio.UserContext, name: Radio.UserContext},
       {DynamicSupervisor, name: Radio.StationSupervisor, strategy: :one_for_one}
     ]
 

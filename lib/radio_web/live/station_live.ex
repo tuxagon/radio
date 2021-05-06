@@ -4,7 +4,6 @@ defmodule RadioWeb.StationLive do
   alias Phoenix.PubSub
   alias Radio.Spotify
   alias Radio.Context
-  alias Radio.UserContext
 
   alias Radio.Spotify.ApiClient, as: SpotifyApi
 
@@ -23,7 +22,7 @@ defmodule RadioWeb.StationLive do
           Process.send(self(), :fetch_devices, [])
         end
 
-        context = UserContext.get(Radio.UserContext, user_id)
+        {:ok, context} = Radio.ContextCache.get(user_id)
         track_list = Radio.StationRegistry.upcoming(station_name)
 
         if is_nil(context) do
@@ -89,13 +88,13 @@ defmodule RadioWeb.StationLive do
 
     {:ok, station} = Radio.StationRegistry.lookup(station_name)
 
-    device = %Spotify.Device{id: id, name: name}
+    device = %Spotify.Device{id: id, name: name, type: "todo"}
 
-    context = UserContext.get(Radio.UserContext, user_id)
-    updated_context = Map.put(context, :selected_device, device)
+    {:ok, context} = Radio.ContextCache.get(user_id)
+    updated_context = Radio.Context.select_device(context, device)
 
     with {:ok, _body} <- Radio.TrackQueue.play_on(station, id, context.access_token),
-         :ok <- UserContext.update(Radio.UserContext, updated_context) do
+         {:ok, _} <- Radio.ContextCache.put(user_id, updated_context) do
       {:noreply, socket |> assign(context: updated_context)}
     else
       {:error, %{status: 401}} ->
@@ -125,8 +124,8 @@ defmodule RadioWeb.StationLive do
     %{station_name: station_name, current_user_id: user_id} = socket.assigns
 
     socket =
-      case UserContext.get(Radio.UserContext, user_id) do
-        %Context{selected_device: %Spotify.Device{} = device} = context ->
+      case Radio.ContextCache.get(user_id) do
+        {:ok, %Context{selected_device: %Spotify.Device{} = device} = context} ->
           case SpotifyApi.queue_track(context.access_token, track_info.uri) do
             {:ok, _body} ->
               socket |> put_flash(:success, "Queuing #{track_info.name} on #{device.name}")
@@ -183,7 +182,7 @@ defmodule RadioWeb.StationLive do
   def handle_info(:fetch_devices, socket) do
     %{station_name: station_name, current_user_id: user_id} = socket.assigns
 
-    context = UserContext.get(Radio.UserContext, user_id)
+    {:ok, context} = Radio.ContextCache.get(user_id)
 
     case SpotifyApi.get_my_devices(context.access_token) do
       {:ok, devices} ->

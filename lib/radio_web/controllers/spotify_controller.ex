@@ -3,7 +3,6 @@ defmodule RadioWeb.SpotifyController do
 
   alias Radio.Spotify
   alias Radio.Spotify.User
-  alias Radio.UserContext
 
   alias Radio.Spotify.ApiClient, as: SpotifyApi
 
@@ -31,13 +30,11 @@ defmodule RadioWeb.SpotifyController do
     else
       conn = clear_session(conn)
 
-      with {:ok, %{"access_token" => access_token} = resp} <-
+      with {:ok, %{"access_token" => access_token}} <-
              SpotifyApi.exchange_auth_code_for_token(code),
            {:ok, %User{} = user} <- SpotifyApi.get_my_user(access_token),
-           context <- UserContext.get(Radio.UserContext, user.id) do
-        IO.inspect(resp)
-
-        UserContext.insert(Radio.UserContext, %Radio.Context{
+           {:ok, context} <- Radio.ContextCache.get(user.id) do
+        Radio.ContextCache.put(user.id, %Radio.Context{
           user: user,
           access_token: access_token,
           selected_device: if(is_nil(context), do: nil, else: context.selected_device)
@@ -66,7 +63,7 @@ defmodule RadioWeb.SpotifyController do
   def logout(conn, _params) do
     user_id = get_session(conn, :current_user_id)
 
-    UserContext.remove(Radio.UserContext, user_id)
+    Radio.ContextCache.del(user_id)
 
     conn |> redirect(to: "/")
   end
