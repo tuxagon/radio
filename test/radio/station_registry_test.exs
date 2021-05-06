@@ -41,7 +41,7 @@ defmodule Radio.StationRegistryTest do
 
     allow(Radio.Spotify.MockApiClient, self(), station_pid)
 
-    expect(Radio.Spotify.MockApiClient, :get_track, fn _track_id ->
+    expect(Radio.Spotify.MockApiClient, :get_track, fn @track_id ->
       send(parent, {ref, :get_track})
       {:ok, @track_info}
     end)

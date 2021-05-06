@@ -9,7 +9,8 @@ use Mix.Config
 
 config :radio,
   ecto_repos: [Radio.Repo],
-  http_client: HTTPoison
+  http_client: HTTPoison,
+  spotify_api_client: Radio.Spotify.ApiClient
 
 # Configures the endpoint
 config :radio, RadioWeb.Endpoint,

@@ -3,7 +3,7 @@ defmodule Radio.TrackQueue do
 
   alias Radio.Spotify.TrackInfo
 
-  alias Radio.Spotify.ApiClient, as: SpotifyApi
+  defp spotify_api_client, do: Application.get_env(:radio, :spotify_api_client)
 
   @spec start_link(String.t(), GenServer.options()) :: GenServer.on_start()
   def start_link(name, opts) do
@@ -52,12 +52,12 @@ defmodule Radio.TrackQueue do
       |> :queue.to_list()
       |> Enum.map(fn %{uri: uri} -> uri end)
 
-    {:reply, SpotifyApi.start_playback(access_token, device_id, uris), state}
+    {:reply, spotify_api_client().start_playback(access_token, device_id, uris), state}
   end
 
   @impl true
   def handle_cast({:add_track, track_id}, {name, track_queue}) do
-    case SpotifyApi.get_track(track_id) do
+    case spotify_api_client().get_track(track_id) do
       {:ok, %TrackInfo{duration_ms: duration_ms} = track_info} ->
         if :queue.is_empty(track_queue) do
           Process.send_after(self(), :next_track, duration_ms)

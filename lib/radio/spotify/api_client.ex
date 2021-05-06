@@ -1,4 +1,6 @@
 defmodule Radio.Spotify.ApiClient do
+  @behaviour Radio.Spotify.ApiBehaviour
+
   @type error :: {:error, %{message: any, status: nil | integer}}
 
   alias Radio.Spotify.Device
@@ -27,6 +29,7 @@ defmodule Radio.Spotify.ApiClient do
       }}
 
   """
+  @impl true
   @spec get_track(String.t(), Keyword.t()) :: {:ok, Radio.Spotify.TrackInfo.t()} | error()
   def get_track(track_id, opts \\ default_opts()) do
     case exchange_client_credentials_for_token(opts) do
@@ -108,6 +111,7 @@ defmodule Radio.Spotify.ApiClient do
   @doc """
   Starts playback for the list of `uris` on the device specified with `device_id`.
   """
+  @impl true
   @spec start_playback(String.t(), String.t(), [String.t()], Keyword.t()) :: {:ok, any} | error()
   def start_playback(access_token, device_id, uris, opts \\ default_opts()) do
     headers = [token_auth(access_token) | [json_content(), accept_json()]]

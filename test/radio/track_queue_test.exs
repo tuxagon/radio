@@ -105,7 +105,7 @@ defmodule Radio.TrackQueueTest do
     parent = self()
     ref = make_ref()
 
-    expect(Radio.Spotify.MockApiClient, :start_playback, fn _token_info, _device_id, _uris ->
+    expect(Radio.Spotify.MockApiClient, :start_playback, fn _access_token, _device_id, _uris ->
       send(parent, {ref, :start_playback})
       :ok
     end)

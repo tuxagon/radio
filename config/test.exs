@@ -19,7 +19,8 @@ config :radio, RadioWeb.Endpoint,
   server: false
 
 config :radio,
-  http_client: Radio.HTTPClientMock
+  http_client: Radio.HTTPClientMock,
+  spotify_api_client: Radio.Spotify.MockApiClient
 
 # Print only warnings and errors during test
 config :logger, level: :warn
