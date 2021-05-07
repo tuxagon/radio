@@ -22,6 +22,7 @@ config :radio, RadioWeb.Endpoint,
 
 config :radio, :spotify,
   api_url: "https://api.spotify.com",
+  authorize_url: "https://accounts.spotify.com/authorize",
   redirect_uri: "http://localhost:4000/callback",
   token_url: "https://accounts.spotify.com/api/token"
 
