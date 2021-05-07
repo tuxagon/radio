@@ -11,7 +11,7 @@ defmodule RadioWeb.SpotifyController do
   end
 
   def login(conn, params) do
-    %{url: authorize_url, state: auth_state} = Spotify.authorize_url()
+    {authorize_url, auth_state} = Spotify.authorize_url()
 
     station = params["return_station"] || ""
 
@@ -53,7 +53,7 @@ defmodule RadioWeb.SpotifyController do
   def choose(conn, params) do
     case params do
       %{"return_station" => station_name} ->
-        conn |> redirect(to: "/radio/#{station_name}")
+        conn |> redirect(to: Routes.station_path(conn, :index, station_name))
 
       _params ->
         conn |> render("choose.html")
