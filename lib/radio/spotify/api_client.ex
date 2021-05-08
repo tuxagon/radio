@@ -59,6 +59,7 @@ defmodule Radio.Spotify.ApiClient do
   @doc """
   Get current user's devices.
   """
+  @impl true
   @spec get_my_devices(String.t(), Keyword.t()) :: {:ok, [Radio.Spotify.Device.t()]} | error()
   def get_my_devices(access_token, opts \\ default_opts()) do
     headers = [token_auth(access_token) | [json_content(), accept_json()]]

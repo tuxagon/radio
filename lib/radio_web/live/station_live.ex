@@ -6,6 +6,7 @@ defmodule RadioWeb.StationLive do
   alias Radio.Context
 
   alias Radio.Spotify.ApiClient, as: SpotifyApi
+  defp spotify_api_client, do: Application.get_env(:radio, :spotify_api_client)
 
   @impl true
   def mount(%{"station" => name} = _params, session, socket) do
@@ -184,7 +185,7 @@ defmodule RadioWeb.StationLive do
 
     {:ok, context} = Radio.ContextCache.get(user_id)
 
-    case SpotifyApi.get_my_devices(context.access_token) do
+    case spotify_api_client().get_my_devices(context.access_token) do
       {:ok, devices} ->
         {:noreply, socket |> assign(devices: devices)}
 
