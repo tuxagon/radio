@@ -2,6 +2,25 @@ defmodule RadioWeb.SpotifyControllerTest do
   use RadioWeb.ConnCase
   doctest RadioWeb.SpotifyController
 
+  import Mox
+
+  @auth_code "test_code"
+  @exchange_auth_code_for_token_resp %{
+    "access_token" => "c28ab7e3-bfc8-42b5-bfaf-8d32353a6e57",
+    "expires_in" => 3600,
+    "refresh_token" => "39ebc2ef-0b90-4a07-bf18-0af03fd5fb09",
+    "scope" => "user-read-email",
+    "token_type" => "Bearer"
+  }
+  @user %Radio.Spotify.User{id: "37b660b8-7525-4904-905a-e0fd09965603", name: "Test User"}
+
+  setup :verify_on_exit!
+
+  setup do
+    Cachex.clear!(:context_cache)
+    :ok
+  end
+
   describe "index" do
     test "renders html", %{conn: conn} do
       conn = get(conn, Routes.spotify_path(conn, :index))
@@ -75,34 +94,129 @@ defmodule RadioWeb.SpotifyControllerTest do
     end
   end
 
-  # describe "play" do
-  #   test "plays music on the specified device", %{conn: conn} do
-  #     device_id = "123"
-  #     station_name = "test"
-  #     token_info = %Radio.Spotify.TokenInfo{access_token: "abc123"}
+  describe "callback" do
+    test "redirects with state_mismatch when auth state does not match", %{conn: conn} do
+      bad_state = "invalid"
 
-  #     parent = self()
-  #     ref = make_ref()
+      {_, actual_state} = Radio.Spotify.authorize_url()
 
-  #     {:ok, station_pid} = Radio.StationRegistry.lookup(station_name)
+      conn =
+        conn
+        |> put_session(:spotify_state, actual_state)
+        |> get(Routes.spotify_path(conn, :callback, state: bad_state, code: @auth_code))
 
-  #     allow(Radio.Spotify.MockApiClient, self(), station_pid)
+      assert redirected_to(conn) == Routes.spotify_path(conn, :index, error: "state_mismatch")
+    end
 
-  #     expect(Radio.Spotify.MockApiClient, :start_playback, fn _token_info, _device_id, _uris ->
-  #       send(parent, {ref, :start_playback})
-  #       {:ok, nil}
-  #     end)
+    test "redirects with invalid_code when auth code does not match", %{conn: conn} do
+      {_, actual_state} = Radio.Spotify.authorize_url()
 
-  #     conn =
-  #       conn
-  #       |> put_session(:token_info, token_info)
-  #       |> post(Routes.spotify_path(RadioWeb.Endpoint, :play, device_id), %{
-  #         station_name: station_name
-  #       })
+      expect(Radio.Spotify.MockApiClient, :exchange_auth_code_for_token, fn _code ->
+        {:error, %{message: "Invalid authorization code", status: 400}}
+      end)
 
-  #     assert_receive {^ref, :start_playback}
-  #     assert json_response(conn, 200)["device_id"] == device_id
-  #     verify!()
-  #   end
-  # end
+      conn =
+        conn
+        |> put_session(:spotify_auth_state, actual_state)
+        |> get(Routes.spotify_path(conn, :callback, state: actual_state, code: @auth_code))
+
+      assert redirected_to(conn) == Routes.spotify_path(conn, :index, error: "invalid_code")
+      assert %{} = get_session(conn)
+    end
+
+    test "exchanges code for token and redirects to station selection", %{conn: conn} do
+      {_, actual_state} = Radio.Spotify.authorize_url()
+
+      access_token = @exchange_auth_code_for_token_resp["access_token"]
+
+      expect(Radio.Spotify.MockApiClient, :exchange_auth_code_for_token, fn @auth_code ->
+        {:ok, @exchange_auth_code_for_token_resp}
+      end)
+
+      expect(Radio.Spotify.MockApiClient, :get_my_user, fn ^access_token ->
+        {:ok, @user}
+      end)
+
+      conn =
+        conn
+        |> put_session(:spotify_auth_state, actual_state)
+        |> get(Routes.spotify_path(conn, :callback, state: actual_state, code: @auth_code))
+
+      assert redirected_to(conn) == Routes.spotify_path(conn, :choose)
+      assert nil == get_session(conn, :spotify_auth_state)
+      assert @user.id == get_session(conn, :current_user_id)
+
+      assert {:ok, %Radio.Context{user: @user, access_token: access_token, selected_device: nil}} ==
+               Radio.ContextCache.get(@user.id)
+    end
+
+    test "exchanges code for token and redirects to a pre-determined station", %{conn: conn} do
+      {_, actual_state} = Radio.Spotify.authorize_url()
+
+      station = "test"
+      access_token = @exchange_auth_code_for_token_resp["access_token"]
+
+      expect(Radio.Spotify.MockApiClient, :exchange_auth_code_for_token, fn @auth_code ->
+        {:ok, @exchange_auth_code_for_token_resp}
+      end)
+
+      expect(Radio.Spotify.MockApiClient, :get_my_user, fn ^access_token ->
+        {:ok, @user}
+      end)
+
+      conn =
+        conn
+        |> put_session(:spotify_auth_state, actual_state)
+        |> put_session(:station, station)
+        |> get(Routes.spotify_path(conn, :callback, state: actual_state, code: @auth_code))
+
+      assert redirected_to(conn) == Routes.station_path(conn, :index, station)
+      assert nil == get_session(conn, :spotify_auth_state)
+      assert nil == get_session(conn, :station)
+      assert @user.id == get_session(conn, :current_user_id)
+
+      assert {:ok, %Radio.Context{user: @user, access_token: access_token, selected_device: nil}} ==
+               Radio.ContextCache.get(@user.id)
+    end
+
+    test "exchanges code for token and keeps existing selected device", %{conn: conn} do
+      {_, actual_state} = Radio.Spotify.authorize_url()
+
+      station = "test"
+      access_token = @exchange_auth_code_for_token_resp["access_token"]
+
+      existing_context = %Radio.Context{
+        user: @user,
+        access_token: access_token,
+        selected_device: %Radio.Spotify.Device{
+          id: "40c4c27b-38d5-4779-bcac-80b62183d135",
+          name: "Test Device",
+          type: "Computer"
+        }
+      }
+
+      Radio.ContextCache.put(@user.id, existing_context)
+
+      expect(Radio.Spotify.MockApiClient, :exchange_auth_code_for_token, fn @auth_code ->
+        {:ok, @exchange_auth_code_for_token_resp}
+      end)
+
+      expect(Radio.Spotify.MockApiClient, :get_my_user, fn ^access_token ->
+        {:ok, @user}
+      end)
+
+      conn =
+        conn
+        |> put_session(:spotify_auth_state, actual_state)
+        |> put_session(:station, station)
+        |> get(Routes.spotify_path(conn, :callback, state: actual_state, code: @auth_code))
+
+      assert redirected_to(conn) == Routes.station_path(conn, :index, station)
+      assert nil == get_session(conn, :spotify_auth_state)
+      assert nil == get_session(conn, :station)
+      assert @user.id == get_session(conn, :current_user_id)
+
+      assert {:ok, existing_context} == Radio.ContextCache.get(@user.id)
+    end
+  end
 end

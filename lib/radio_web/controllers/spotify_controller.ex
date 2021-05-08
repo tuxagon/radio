@@ -4,7 +4,7 @@ defmodule RadioWeb.SpotifyController do
   alias Radio.Spotify
   alias Radio.Spotify.User
 
-  alias Radio.Spotify.ApiClient, as: SpotifyApi
+  defp spotify_api_client, do: Application.get_env(:radio, :spotify_api_client)
 
   def index(conn, _params) do
     conn |> render("index.html")
@@ -26,13 +26,13 @@ defmodule RadioWeb.SpotifyController do
     station = get_session(conn, :station)
 
     if state != stored_state do
-      redirect(conn, to: "/?error=state_mismatch")
+      redirect(conn, to: Routes.spotify_path(conn, :index, error: "state_mismatch"))
     else
       conn = clear_session(conn)
 
       with {:ok, %{"access_token" => access_token}} <-
-             SpotifyApi.exchange_auth_code_for_token(code),
-           {:ok, %User{} = user} <- SpotifyApi.get_my_user(access_token),
+             spotify_api_client().exchange_auth_code_for_token(code),
+           {:ok, %User{} = user} <- spotify_api_client().get_my_user(access_token),
            {:ok, context} <- Radio.ContextCache.get(user.id) do
         Radio.ContextCache.put(user.id, %Radio.Context{
           user: user,
@@ -42,10 +42,16 @@ defmodule RadioWeb.SpotifyController do
 
         conn
         |> put_session(:current_user_id, user.id)
-        |> redirect(to: if(station == "", do: "/radio", else: "/radio/#{station}"))
+        |> redirect(
+          to:
+            if(to_string(station) == "",
+              do: Routes.spotify_path(conn, :choose),
+              else: Routes.station_path(conn, :index, station)
+            )
+        )
       else
         _ ->
-          redirect(conn, to: "/?error=invalid_token")
+          redirect(conn, to: Routes.spotify_path(conn, :index, error: "invalid_code"))
       end
     end
   end

@@ -82,6 +82,7 @@ defmodule Radio.Spotify.ApiClient do
   @doc """
   Get current user.
   """
+  @impl true
   @spec get_my_user(String.t(), Keyword.t()) :: {:ok, Radio.Spotify.User.t()} | error()
   def get_my_user(access_token, opts \\ default_opts()) do
     headers = [token_auth(access_token) | [json_content(), accept_json()]]
@@ -142,6 +143,7 @@ defmodule Radio.Spotify.ApiClient do
   @doc """
   Gets an access token for an auth code.
   """
+  @impl true
   @spec exchange_auth_code_for_token(String.t(), Keyword.t()) :: {:ok, any} | error()
   def exchange_auth_code_for_token(code, opts \\ default_opts()) do
     encoded_body =
