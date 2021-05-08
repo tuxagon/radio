@@ -16,7 +16,6 @@ import "phoenix_html";
 import { Socket } from "phoenix";
 import topbar from "topbar";
 import { LiveSocket } from "phoenix_live_view";
-import { playOn } from "./spotify";
 
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
