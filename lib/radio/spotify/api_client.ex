@@ -3,6 +3,7 @@ defmodule Radio.Spotify.ApiClient do
 
   @type error :: {:error, %{message: any, status: nil | integer}}
 
+  alias Radio.Spotify.Album
   alias Radio.Spotify.Device
   alias Radio.Spotify.TrackInfo
   alias Radio.Spotify.User
@@ -38,14 +39,7 @@ defmodule Radio.Spotify.ApiClient do
 
         case "/v1/tracks/#{track_id}" |> do_api_get(headers, opts) do
           {:ok, body} ->
-            track_info = %TrackInfo{
-              duration_ms: body["duration_ms"],
-              name: body["name"],
-              uri: body["uri"],
-              artist_names: Enum.map(body["artists"], fn %{"name" => name} -> name end)
-            }
-
-            {:ok, track_info}
+            {:ok, parse_track_info(body)}
 
           {:error, reason} ->
             {:error, reason}
@@ -72,16 +66,7 @@ defmodule Radio.Spotify.ApiClient do
          headers <- [token_auth(access_token) | [json_content(), accept_json()]],
          {:ok, %{"tracks" => %{"items" => results}}} <-
            "/v1/search?#{params}" |> do_api_get(headers, opts) do
-      found_tracks =
-        results
-        |> Enum.map(fn result ->
-          %TrackInfo{
-            duration_ms: result["duration_ms"],
-            name: result["name"],
-            uri: result["uri"],
-            artist_names: Enum.map(result["artists"], fn %{"name" => name} -> name end)
-          }
-        end)
+      found_tracks = results |> Enum.map(fn result -> parse_track_info(result) end)
 
       {:ok, found_tracks}
     else
@@ -205,6 +190,19 @@ defmodule Radio.Spotify.ApiClient do
 
     opts[:token_url]
     |> do_post(encoded_body, headers)
+  end
+
+  defp parse_track_info(body) do
+    album_name = body |> get_in(["album", "name"])
+    album_url = body |> get_in(["album", "images"]) |> List.first() |> get_in(["url"])
+
+    %TrackInfo{
+      duration_ms: body["duration_ms"],
+      name: body["name"],
+      uri: body["uri"],
+      artist_names: Enum.map(body["artists"], fn %{"name" => name} -> name end),
+      album: %Album{name: album_name, image_url: album_url}
+    }
   end
 
   defp handle_response(resp) do

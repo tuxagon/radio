@@ -274,7 +274,11 @@ defmodule Radio.Spotify.ApiClientTest do
         duration_ms: 213_573,
         name: "Never Gonna Give You Up",
         uri: "spotify:track:4cOdK2wGLETKBW3PvgPWqT",
-        artist_names: ["Rick Astley"]
+        artist_names: ["Rick Astley"],
+        album: %Radio.Spotify.Album{
+          image_url: "https://i.scdn.co/image/ab67616d0000b2735755e164993798e0c9ef7d7a",
+          name: "Whenever You Need Somebody"
+        }
       }
 
       resp = SpotifyApi.get_track(track_id, @test_opts)
@@ -357,7 +361,11 @@ defmodule Radio.Spotify.ApiClientTest do
           duration_ms: 213_573,
           name: "Never Gonna Give You Up",
           uri: "spotify:track:4cOdK2wGLETKBW3PvgPWqT",
-          artist_names: ["Rick Astley"]
+          artist_names: ["Rick Astley"],
+          album: %Radio.Spotify.Album{
+            image_url: "https://i.scdn.co/image/ab67616d0000b2735755e164993798e0c9ef7d7a",
+            name: "Whenever You Need Somebody"
+          }
         }
       ]
 

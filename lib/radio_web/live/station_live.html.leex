@@ -7,20 +7,15 @@
 </section>
 
 <section class="flex justify-center w-screen">
-  <div class="container p-10">
-    <form phx-submit="queue">
-      <input type="text" name="song_link" placeholder="Spotify Song Link" autocomplete="off" class="rounded-full px-5 py-3 text-lg w-full outline-none border border-black focus:border-spotify-green" />
-      <button type="submit" phx-disable-with="Queuing..." class="float-right rounded-full mt-4 py-3 px-6 bg-spotify-green text-white">Add to Station Queue</button>
-    </form>
-  </div>
+  <%= live_component @socket, TrackSearchComponent, id: :track_search, station_name: @station_name %>
 </section>
 
 <section class="flex justify-center w-screen">
   <div class="container mx-auto">
     <%= if is_map(@context.selected_device) do %>
-    <div class="flex justify-around border rounded-full mt-10 pt-8 pb-8 border-spotify-green">
+    <div class="flex justify-around border rounded-3xl mt-10 pt-8 pb-8 border-spotify-green">
     <% else %>
-    <div class="flex justify-around border rounded-full border-black mt-10 pt-8 pb-8">
+    <div class="flex justify-around border rounded-3xl border-black mt-10 pt-8 pb-8">
     <% end %>
       <div class="text-left">
         <%= case assigns[:devices] do %>
@@ -35,7 +30,7 @@
             <ul>
               <%= devices |> Enum.map(fn %{id: id, name: name} -> %>
                 <li class="pt-2">
-                  <button phx-click="play-on" phx-value-device-id="<%= id %>" phx-value-device-name="<%= name %>" class="rounded-full py-1 px-3 bg-spotify-green text-white">
+                  <button phx-click="play-on" phx-value-device-id="<%= id %>" phx-value-device-name="<%= name %>" class="rounded-3xl py-1 px-3 bg-spotify-green text-white">
                     Play
                   </button>
                   <p class="inline">

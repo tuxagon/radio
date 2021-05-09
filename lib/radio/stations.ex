@@ -5,8 +5,6 @@ defmodule Radio.Stations do
 
   def find_tracks_by("spotify:track:" <> search_term) do
     search_term
-    |> String.split(":")
-    |> List.last()
     |> spotify_api_client().get_track()
     |> (fn result ->
           case result do
@@ -30,7 +28,7 @@ defmodule Radio.Stations do
 
       true ->
         search_term
-        |> spotify_api_client().search_tracks(10, 0)
+        |> spotify_api_client().search_tracks(5, 0)
         |> (fn result ->
               case result do
                 {:ok, tracks} ->
@@ -42,4 +40,9 @@ defmodule Radio.Stations do
             end).()
     end
   end
+
+  def queue_track(station_name, "spotify:track:" <> track_id),
+    do: Radio.StationRegistry.queue_track(station_name, track_id)
+
+  def queue_track(_station_name, _track_uri), do: nil
 end
