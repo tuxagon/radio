@@ -15,7 +15,7 @@
     <%= if is_map(@context.selected_device) do %>
     <div class="flex justify-around border rounded-3xl mt-10 pt-8 pb-8 border-spotify-green">
     <% else %>
-    <div class="flex justify-around border rounded-3xl border-black mt-10 pt-8 pb-8">
+    <div class="flex justify-between border rounded-3xl border-black mt-10 pt-8 pb-8 ml-20 mr-20 pl-20 pr-20">
     <% end %>
       <div class="text-left">
         <%= case assigns[:devices] do %>
