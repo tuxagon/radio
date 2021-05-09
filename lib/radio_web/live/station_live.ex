@@ -66,7 +66,7 @@ defmodule RadioWeb.StationLive do
          |> put_flash(:error, "Missing Song Link")}
 
       song_link ->
-        if Spotify.valid_song_link?(song_link) do
+        if Spotify.song_link?(song_link) do
           track_id = Spotify.track_id_from_song_link(song_link)
 
           Radio.StationRegistry.queue_track(name, track_id)

@@ -32,8 +32,8 @@ defmodule Radio.Spotify do
     if path == song_link, do: nil, else: String.replace_prefix(path, "/track/", "")
   end
 
-  def valid_song_link?(song_link) do
-    case URI.parse(song_link) do
+  def song_link?(string) do
+    case URI.parse(string) do
       %URI{host: "open.spotify.com"} ->
         true
 

@@ -50,17 +50,17 @@ defmodule Radio.SpotifyTest do
     end
   end
 
-  describe "valid_song_link?" do
+  describe "song_link?" do
     test "returns true when valid" do
       song_link = "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=4954eec923ed4eca"
 
-      assert true == Radio.Spotify.valid_song_link?(song_link)
+      assert true == Radio.Spotify.song_link?(song_link)
     end
 
     test "returns false when invalid" do
       song_link = "invalid"
 
-      assert false == Radio.Spotify.valid_song_link?(song_link)
+      assert false == Radio.Spotify.song_link?(song_link)
     end
   end
 end
