@@ -56,6 +56,43 @@ defmodule Radio.Spotify.ApiClient do
     end
   end
 
+  @impl true
+  @spec search_tracks(
+          search_term :: String.t(),
+          limit :: integer(),
+          offset :: integer,
+          Keyword.t()
+        ) :: {:ok, [Radio.Spotify.Device.t()]} | error()
+  def search_tracks(search_term, limit, offset, opts \\ default_opts()) do
+    params =
+      %{q: search_term, type: "track", limit: limit, offset: offset}
+      |> URI.encode_query()
+
+    with {:ok, %{"access_token" => access_token}} <- exchange_client_credentials_for_token(opts),
+         headers <- [token_auth(access_token) | [json_content(), accept_json()]],
+         {:ok, %{"tracks" => %{"items" => results}}} <-
+           "/v1/search?#{params}" |> do_api_get(headers, opts) do
+      found_tracks =
+        results
+        |> Enum.map(fn result ->
+          %TrackInfo{
+            duration_ms: result["duration_ms"],
+            name: result["name"],
+            uri: result["uri"],
+            artist_names: Enum.map(result["artists"], fn %{"name" => name} -> name end)
+          }
+        end)
+
+      {:ok, found_tracks}
+    else
+      {:ok, _body} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   @doc """
   Get current user's devices.
   """
